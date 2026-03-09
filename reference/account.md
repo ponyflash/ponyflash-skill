@@ -2,11 +2,11 @@
 
 ## Methods
 
-### `client.account.credits() -> CreditBalance`
+### `pony_flash.account.credits() -> CreditBalance`
 
 Get current credit balance.
 
-### `client.account.recharge(*, amount=NOT_GIVEN, redirect_url=NOT_GIVEN) -> RechargeResponse`
+### `pony_flash.account.recharge(*, amount=NOT_GIVEN, redirect_url=NOT_GIVEN) -> RechargeResponse`
 
 Get a recharge payment link.
 
@@ -39,10 +39,10 @@ Get a recharge payment link.
 ## Example
 
 ```python
-bal = client.account.credits()
+bal = pony_flash.account.credits()
 print(f"Balance: {bal.balance} {bal.currency}")
 
 if bal.balance < 50:
-    resp = client.account.recharge(amount=100)
+    resp = pony_flash.account.recharge(amount=100)
     print(f"Recharge at: {resp.recharge_url}")
 ```

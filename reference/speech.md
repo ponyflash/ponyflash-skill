@@ -1,14 +1,10 @@
 # Speech API Reference
 
-## Methods
+## Method
 
-### `client.speech.submit(**kwargs) -> CreateResponse`
+### `pony_flash.speech.generate(**kwargs) -> Generation`
 
-Submits a speech synthesis request. Returns immediately.
-
-### `client.speech.generate(**kwargs) -> Generation`
-
-Submits and polls until completion.
+Generate speech audio and wait for completion.
 
 ## Parameters
 
@@ -35,17 +31,10 @@ Submits and polls until completion.
 | `style` | `float` | Style exaggeration (0.0-1.0) |
 | `use_speaker_boost` | `bool` | Enable speaker boost |
 
-`generate()` adds:
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `poll_interval` | `float` | `2.0` | Seconds between status checks |
-| `timeout` | `float` | `300.0` | Max seconds to wait (5 min) |
-
 ## Example
 
 ```python
-gen = client.speech.generate(
+gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
     input="Hello, welcome to PonyFlash!",
     voice="English_Graceful_Lady",

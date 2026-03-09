@@ -1,14 +1,10 @@
 # Video API Reference
 
-## Methods
+## Method
 
-### `client.video.submit(**kwargs) -> CreateResponse`
+### `pony_flash.video.generate(**kwargs) -> Generation`
 
-Submits a video generation request. Returns immediately.
-
-### `client.video.generate(**kwargs) -> Generation`
-
-Submits and polls until completion.
+Generate video and wait for completion.
 
 ## Parameters
 
@@ -26,13 +22,6 @@ Submits and polls until completion.
 | `reference_images` | `List[FileInput]` | No | — | Reference images |
 | `motion_video` | `FileInput` | No | — | Motion source video (for Motion Transfer) |
 
-`generate()` adds:
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `poll_interval` | `float` | `5.0` | Seconds between status checks |
-| `timeout` | `float` | `900.0` | Max seconds to wait (15 min) |
-
 ## Generation modes
 
 | Mode | Required params | Model example |
@@ -45,7 +34,7 @@ Submits and polls until completion.
 ## Example
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="seedance-1.5-pro",
     prompt="Ocean waves crashing on a beach",
     duration=5,

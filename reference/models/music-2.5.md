@@ -5,7 +5,7 @@ Full-song generation with vocals, lyrics structure control, and instrumental mod
 ## Supported parameters via PonyFlash SDK
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Soulful Blues, Rainy Night, Melancholy, Male Vocals, Slow Tempo",
     lyrics="[Verse]\nThe sky is cryin', Lord\nI can hear it on the roof\n\n[Chorus]\nMidnight rain, fallin' down on me\nLike tears I can't cry",
@@ -65,7 +65,7 @@ Lines within lyrics separated by `\n`. Max 3500 characters.
 ## Example: full song with structure
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Upbeat Pop, Summer Vibes, Female Vocals, 120 BPM",
     lyrics=(
@@ -91,7 +91,7 @@ print(gen.url)
 ## Example: instrumental
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Cinematic Orchestral, Epic, Dramatic, Strings, Brass",
     instrumental=True,
@@ -102,7 +102,7 @@ gen = client.music.generate(
 ## Example: continue a song from timestamp
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Continue with an electric guitar solo, blues style",
     reference_audio=open("my_track.mp3", "rb"),

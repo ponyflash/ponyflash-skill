@@ -2,11 +2,11 @@
 
 ## Methods
 
-### `client.models.list(**kwargs) -> SyncPage[ModelInfo]`
+### `pony_flash.models.list(**kwargs) -> SyncPage[ModelInfo]`
 
 List available models. Supports pagination and filtering by type.
 
-### `client.models.get(model_id: str) -> ModelDetail`
+### `pony_flash.models.get(model_id: str) -> ModelDetail`
 
 Get detailed information about a specific model.
 
@@ -69,7 +69,7 @@ Additional fields:
 | `unit` | `str` |
 | `credits` | `int` |
 
-## SyncPage / AsyncPage
+## SyncPage
 
 | Field | Type | Description |
 |---|---|---|
@@ -82,11 +82,11 @@ Iterable: `for model in page.items:`.
 ## Example
 
 ```python
-page = client.models.list(type="video")
+page = pony_flash.models.list(type="video")
 for m in page.items:
     print(f"{m.id}: sizes={m.supported_sizes}, durations={m.supported_durations}")
 
-detail = client.models.get("omnihuman-1.5")
+detail = pony_flash.models.get("omnihuman-1.5")
 for mode in detail.supported_modes:
     print(f"  {mode.name}: required={mode.required_fields}")
 ```

@@ -27,14 +27,13 @@ export PONYFLASH_API_KEY="pf_xxx"
 
 | Capability | Resource | Description |
 |---|---|---|
-| Image generation | `client.images` | Text-to-image, image editing with mask/reference images |
-| Video generation | `client.video` | Text-to-video, first-frame-to-video, OmniHuman, Motion Transfer |
-| Speech synthesis | `client.speech` | Text-to-speech with voice control, emotion, speed, pitch |
-| Music generation | `client.music` | Text-to-music with lyrics, style, instrumental mode, continuation |
-| Model listing | `client.models` | List available models, get model details and supported modes |
-| File management | `client.files` | Upload, list, get, delete files |
-| Generation polling | `client.generations` | Check status, wait for completion |
-| Account | `client.account` | Check credit balance, get recharge link |
+| Image generation | `pony_flash.images` | Text-to-image, image editing with mask/reference images |
+| Video generation | `pony_flash.video` | Text-to-video, first-frame-to-video, OmniHuman, Motion Transfer |
+| Speech synthesis | `pony_flash.speech` | Text-to-speech with voice control, emotion, speed, pitch |
+| Music generation | `pony_flash.music` | Text-to-music with lyrics, style, instrumental mode, continuation |
+| Model listing | `pony_flash.models` | List available models, get model details and supported modes |
+| File management | `pony_flash.files` | Upload, list, get, delete files |
+| Account | `pony_flash.account` | Check credit balance, get recharge link |
 
 ## Core concepts
 
@@ -43,29 +42,10 @@ export PONYFLASH_API_KEY="pf_xxx"
 ```python
 from ponyflash import PonyFlash
 
-client = PonyFlash(api_key="pf_xxx")
+pony_flash = PonyFlash(api_key="pf_xxx")
 ```
 
-Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted. Base URL defaults to `https://api.ponyflash.com/v1`; override with `base_url` param or `PONYFLASH_BASE_URL` env var.
-
-### Async client
-
-```python
-from ponyflash import AsyncPonyFlash
-
-client = AsyncPonyFlash(api_key="pf_xxx")
-gen = await client.images.generate(model="nanobanana-pro", prompt="A sunset")
-print(gen.url)
-```
-
-Every sync method has an async counterpart with the same signature.
-
-### submit() vs generate()
-
-- `submit()` fires the request and returns `CreateResponse` immediately (contains `request_id`).
-- `generate()` calls `submit()` then polls until completion, returning `Generation` with output URLs and usage.
-
-Use `submit()` when you want to manage polling yourself; use `generate()` for the common case.
+Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted. 
 
 ### FileInput — zero-friction file handling
 
@@ -96,7 +76,7 @@ Convenience properties:
 ### Image
 
 ```python
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana-pro",
     prompt="A sunset over mountains",
     size="2K",
@@ -107,7 +87,7 @@ print(gen.url)
 ### Video
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="seedance-1.5-pro",
     prompt="A timelapse of a city at night",
     duration=5,
@@ -118,7 +98,7 @@ print(gen.url)
 ### Speech
 
 ```python
-gen = client.speech.generate(
+gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
     input="Hello, welcome to PonyFlash!",
     voice="English_Graceful_Lady",
@@ -129,7 +109,7 @@ print(gen.url)
 ### Music
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="An upbeat electronic dance track",
     duration=30,
@@ -140,7 +120,7 @@ print(gen.url)
 ### List models
 
 ```python
-page = client.models.list()
+page = pony_flash.models.list()
 for model in page.items:
     print(f"{model.id} ({model.type})")
 ```
@@ -148,34 +128,8 @@ for model in page.items:
 ### Check balance
 
 ```python
-balance = client.account.credits()
+balance = pony_flash.account.credits()
 print(f"Balance: {balance.balance} {balance.currency}")
-```
-
-### Non-blocking submit + manual polling
-
-```python
-resp = client.images.submit(model="nanobanana-pro", prompt="A cat")
-gen = client.generations.wait(resp.request_id, timeout=60)
-print(gen.url)
-```
-
-### Async parallel generation
-
-```python
-import asyncio
-from ponyflash import AsyncPonyFlash
-
-async def main():
-    client = AsyncPonyFlash()
-    img, vid = await asyncio.gather(
-        client.images.generate(model="nanobanana-pro", prompt="A cat"),
-        client.video.generate(model="seedance-1.5-pro", prompt="A flying cat", duration=5),
-    )
-    print(f"Image: {img.url}")
-    print(f"Video: {vid.url}")
-
-asyncio.run(main())
 ```
 
 ## Error handling
@@ -186,26 +140,23 @@ from ponyflash import (
     InsufficientCreditsError,
     RateLimitError,
     GenerationFailedError,
-    GenerationTimeoutError,
     AuthenticationError,
 )
 
-client = PonyFlash()
+pony_flash = PonyFlash()
 
 try:
-    gen = client.images.generate(model="nanobanana-pro", prompt="A cat")
+    gen = pony_flash.images.generate(model="nanobanana-pro", prompt="A cat")
 except AuthenticationError:
     print("Invalid API key")
 except InsufficientCreditsError as e:
     print(f"Not enough credits. Balance: {e.balance}, required: {e.required}")
-    link = client.account.recharge()
+    link = pony_flash.account.recharge()
     print(f"Recharge at: {link.recharge_url}")
 except RateLimitError:
     print("Rate limited — wait and retry")
 except GenerationFailedError as e:
     print(f"Generation failed: {e.generation.error.code}")
-except GenerationTimeoutError as e:
-    print(f"Timed out after {e.timeout}s, check: client.generations.get('{e.request_id}')")
 ```
 
 ## More examples
@@ -223,7 +174,6 @@ For complete method signatures, parameter types, and return type fields:
 - **Music generation**: [reference/music.md](reference/music.md)
 - **Model listing**: [reference/models.md](reference/models.md)
 - **File management**: [reference/files.md](reference/files.md)
-- **Generation polling**: [reference/generations.md](reference/generations.md)
 - **Account / credits**: [reference/account.md](reference/account.md)
 
 ## Model catalog

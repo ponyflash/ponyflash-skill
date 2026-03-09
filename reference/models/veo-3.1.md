@@ -5,7 +5,7 @@ Google's high-quality video generation model. Supports text-to-video, image-to-v
 ## Supported parameters via PonyFlash SDK
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="veo-3.1",
     prompt="Ocean waves crashing on a rocky coastline at sunset",
     size="1920x1080",     # 720p or 1080p
@@ -39,7 +39,7 @@ gen = client.video.generate(
 ## Example: text-to-video (1080p)
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="veo-3.1",
     prompt="A drone shot flying over a misty mountain forest at sunrise",
     size="1920x1080",
@@ -51,7 +51,7 @@ print(gen.url)
 ## Example: image-to-video
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="veo-3.1",
     first_frame="https://example.com/landscape.jpg",
     prompt="Camera slowly pans right revealing a waterfall",
@@ -65,7 +65,7 @@ gen = client.video.generate(
 ```python
 from pathlib import Path
 
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="veo-3.1",
     prompt="A person walking through a garden",
     reference_images=[Path("style_ref.jpg")],

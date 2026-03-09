@@ -1,14 +1,10 @@
 # Music API Reference
 
-## Methods
+## Method
 
-### `client.music.submit(**kwargs) -> CreateResponse`
+### `pony_flash.music.generate(**kwargs) -> Generation`
 
-Submits a music generation request. Returns immediately.
-
-### `client.music.generate(**kwargs) -> Generation`
-
-Submits and polls until completion.
+Generate music and wait for completion.
 
 ## Parameters
 
@@ -16,7 +12,7 @@ Submits and polls until completion.
 |---|---|---|---|---|
 | `model` | `str` | Yes | — | Model ID (e.g. `"music-2.5"`) |
 | `prompt` | `str` | Yes | — | Description of the music to generate |
-| `lyrics` | `str` | No | — | Song lyrics |
+| `lyrics` | `str` | No | — | Song lyrics (supports structure tags like `[Verse]`, `[Chorus]`) |
 | `title` | `str` | No | — | Song title |
 | `style` | `str` | No | — | Music style (e.g. `"pop ballad"`, `"electronic"`) |
 | `duration` | `int` | No | — | Duration in seconds |
@@ -26,17 +22,10 @@ Submits and polls until completion.
 | `format` | `str` | No | — | Output format |
 | `quality` | `str` | No | — | Quality level |
 
-`generate()` adds:
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `poll_interval` | `float` | `5.0` | Seconds between status checks |
-| `timeout` | `float` | `600.0` | Max seconds to wait (10 min) |
-
 ## Example
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="A chill lo-fi hip hop beat for studying",
     instrumental=True,

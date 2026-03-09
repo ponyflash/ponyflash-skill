@@ -7,7 +7,7 @@ More examples beyond the basics in SKILL.md. For model-specific parameters and c
 ```python
 from pathlib import Path
 
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana",
     prompt="Remove the background",
     images=[Path("photo.jpg")],
@@ -19,7 +19,7 @@ print(gen.url)
 ## Multiple images
 
 ```python
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana-pro",
     prompt="A cat in space",
     n=4,
@@ -32,7 +32,7 @@ for url in gen.urls:
 ## Text-to-video (Veo 3.1)
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="veo-3.1",
     prompt="Ocean waves crashing on a rocky coastline at sunset",
     size="1920x1080",
@@ -45,7 +45,7 @@ print(gen.url)
 
 ```python
 with open("my_photo.jpg", "rb") as f:
-    gen = client.video.generate(
+    gen = pony_flash.video.generate(
         model="seedance-1.5-pro",
         first_frame=f,
         prompt="Camera slowly zooms in",
@@ -55,7 +55,7 @@ with open("my_photo.jpg", "rb") as f:
 ## First-frame to video (URL)
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="seedance-1.5-pro",
     first_frame="https://example.com/photo.jpg",
     prompt="Camera slowly zooms in",
@@ -66,7 +66,7 @@ gen = client.video.generate(
 
 ```python
 with open("portrait.jpg", "rb") as img, open("speech.wav", "rb") as audio:
-    gen = client.video.generate(
+    gen = pony_flash.video.generate(
         model="omnihuman-1.5",
         first_frame=img,
         audio=audio,
@@ -78,7 +78,7 @@ with open("portrait.jpg", "rb") as img, open("speech.wav", "rb") as audio:
 
 ```python
 with open("avatar.jpg", "rb") as img, open("dance.mp4", "rb") as vid:
-    gen = client.video.generate(
+    gen = pony_flash.video.generate(
         model="motion-transfer-1",
         first_frame=img,
         motion_video=vid,
@@ -89,7 +89,7 @@ with open("avatar.jpg", "rb") as img, open("dance.mp4", "rb") as vid:
 ## Speech with full voice control
 
 ```python
-gen = client.speech.generate(
+gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
     input="Breaking news (gasps): AI can now compose music.",
     voice="English_Insightful_Speaker",
@@ -111,7 +111,7 @@ gen = client.speech.generate(
 ## Music with lyrics and structure tags
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Soulful Blues, Rainy Night, Melancholy, Male Vocals, Slow Tempo",
     lyrics="[Verse]\nWaves crash upon the shore\nWhispering forevermore\n\n[Chorus]\nOcean whispers call my name\nNothing here will be the same",
@@ -124,7 +124,7 @@ gen = client.music.generate(
 ## Instrumental music
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Lo-fi hip hop study beats",
     instrumental=True,
@@ -135,7 +135,7 @@ gen = client.music.generate(
 ## Continue / extend a song
 
 ```python
-gen = client.music.generate(
+gen = pony_flash.music.generate(
     model="music-2.5",
     prompt="Continue with a guitar solo",
     reference_audio=open("my_song.mp3", "rb"),
@@ -146,7 +146,7 @@ gen = client.music.generate(
 ## Get model details
 
 ```python
-detail = client.models.get("nanobanana-pro")
+detail = pony_flash.models.get("nanobanana-pro")
 print(detail.supported_sizes)
 print(detail.supported_modes)
 ```
@@ -154,6 +154,6 @@ print(detail.supported_modes)
 ## Get recharge link
 
 ```python
-resp = client.account.recharge(amount=100)
+resp = pony_flash.account.recharge(amount=100)
 print(resp.recharge_url)
 ```

@@ -1,14 +1,10 @@
 # Images API Reference
 
-## Methods
+## Method
 
-### `client.images.submit(**kwargs) -> CreateResponse`
+### `pony_flash.images.generate(**kwargs) -> Generation`
 
-Submits an image generation request. Returns immediately with `request_id`.
-
-### `client.images.generate(**kwargs) -> Generation`
-
-Submits and polls until completion. Returns `Generation` with output URLs.
+Generate images and wait for completion. Returns `Generation` with output URLs.
 
 ## Parameters
 
@@ -16,7 +12,7 @@ Submits and polls until completion. Returns `Generation` with output URLs.
 |---|---|---|---|---|
 | `model` | `str` | Yes | — | Model ID (e.g. `"nanobanana-pro"`, `"nanobanana"`) |
 | `prompt` | `str` | Yes | — | Text description of the image to generate |
-| `size` | `str` | No | — | Output size (e.g. `"1024x1024"`, `"512x512"`) |
+| `size` | `str` | No | — | Output size (e.g. `"1K"`, `"2K"`, `"4K"`) |
 | `n` | `int` | No | — | Number of images to generate |
 | `quality` | `str` | No | — | Quality level |
 | `output_format` | `str` | No | — | Output format |
@@ -24,23 +20,7 @@ Submits and polls until completion. Returns `Generation` with output URLs.
 | `mask` | `FileInput` | No | — | Mask image for inpainting |
 | `context` | `str` | No | — | Additional context for the generation |
 
-`generate()` adds:
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `poll_interval` | `float` | `2.0` | Seconds between status checks |
-| `timeout` | `float` | `120.0` | Max seconds to wait |
-
-## Return types
-
-### CreateResponse
-
-| Field | Type | Description |
-|---|---|---|
-| `request_id` | `str` | Unique generation request ID |
-| `estimated_credits` | `int \| None` | Estimated credit cost |
-
-### Generation
+## Return type: Generation
 
 | Field | Type | Description |
 |---|---|---|
@@ -52,17 +32,10 @@ Submits and polls until completion. Returns `Generation` with output URLs.
 
 **Convenience properties:** `gen.url` (first URL), `gen.urls` (all URLs), `gen.credits` (credits used).
 
-### GenerationOutput
-
-| Field | Type |
-|---|---|
-| `url` | `str \| None` |
-| `duration_sec` | `float \| None` |
-
 ## Example
 
 ```python
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana-pro",
     prompt="A cyberpunk cityscape at night",
     size="2K",

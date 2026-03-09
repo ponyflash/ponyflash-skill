@@ -2,37 +2,37 @@
 
 ## Methods
 
-### `client.files.upload(file: FileInput) -> str`
+### `pony_flash.files.upload(file: FileInput) -> str`
 
 Upload a file via presigned URL. Returns `file_id`.
 
 Most users don't need to call this directly — `generate()` auto-uploads `FileInput` values.
 
-### `client.files.presign(*, filename, content_type, size) -> PresignResponse`
+### `pony_flash.files.presign(*, filename, content_type, size) -> PresignResponse`
 
 Get a presigned upload URL. Low-level; prefer `upload()`.
 
-### `client.files.resolve(inp: FileInput) -> dict`
+### `pony_flash.files.resolve(inp: FileInput) -> dict`
 
 Resolve a `FileInput` to API JSON (`{"type": "url", "url": ...}` or `{"type": "file_id", "file_id": ...}`). Auto-uploads if needed.
 
-### `client.files.resolve_many(inputs: Sequence[FileInput]) -> list[dict]`
+### `pony_flash.files.resolve_many(inputs: Sequence[FileInput]) -> list[dict]`
 
 Resolve multiple `FileInput` values.
 
-### `client.files.get(file_id: str) -> FileObject`
+### `pony_flash.files.get(file_id: str) -> FileObject`
 
 Get file metadata.
 
-### `client.files.list() -> list[FileObject]`
+### `pony_flash.files.list() -> list[FileObject]`
 
 List all uploaded files.
 
-### `client.files.delete(file_id: str) -> None`
+### `pony_flash.files.delete(file_id: str) -> None`
 
 Delete a file.
 
-### `client.files.cleanup(file_ids: Sequence[str]) -> None`
+### `pony_flash.files.cleanup(file_ids: Sequence[str]) -> None`
 
 Best-effort delete of temporary files. Errors are logged, never raised.
 
@@ -63,12 +63,12 @@ Best-effort delete of temporary files. Errors are logged, never raised.
 ## Example
 
 ```python
-file_id = client.files.upload(open("photo.jpg", "rb"))
+file_id = pony_flash.files.upload(open("photo.jpg", "rb"))
 print(f"Uploaded: {file_id}")
 
-files = client.files.list()
+files = pony_flash.files.list()
 for f in files:
     print(f"{f.file_id}: {f.filename} ({f.size} bytes)")
 
-client.files.delete(file_id)
+pony_flash.files.delete(file_id)
 ```

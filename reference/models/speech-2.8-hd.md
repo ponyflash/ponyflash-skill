@@ -5,7 +5,7 @@ MiniMax's highest-quality speech synthesis model. Supports 40+ languages, interj
 ## Supported parameters via PonyFlash SDK
 
 ```python
-gen = client.speech.generate(
+gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
     input="Hello (laughs), welcome to PonyFlash!",
     voice="English_Graceful_Lady",
@@ -79,7 +79,7 @@ Chinese, English, Arabic, Russian, Spanish, French, Portuguese, German, Turkish,
 ## Example: expressive narration
 
 ```python
-gen = client.speech.generate(
+gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
     input="(sighs) The real danger is not that computers start thinking like people (gasps), but that people start thinking like computers.",
     voice="English_Insightful_Speaker",
@@ -96,7 +96,7 @@ print(gen.url)
 ## Example: multilingual with auto-detect
 
 ```python
-gen = client.speech.generate(
+gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
     input="你好世界！Hello World! こんにちは！",
     voice="English_Graceful_Lady",

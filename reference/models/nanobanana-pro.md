@@ -5,7 +5,7 @@ High-quality AI image generation model. Also available as `nanobanana` (standard
 ## Supported parameters via PonyFlash SDK
 
 ```python
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana-pro",   # or "nanobanana"
     prompt="A sunset over mountains",
     size="2K",                # "1K", "2K", "4K"
@@ -51,7 +51,7 @@ Supports up to 8 reference images for image-to-image.
 ## Example: high-res wide image
 
 ```python
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana-pro",
     prompt="Panoramic view of Tokyo skyline at dusk, cinematic",
     size="4K",
@@ -64,7 +64,7 @@ print(gen.url)
 ```python
 from pathlib import Path
 
-gen = client.images.generate(
+gen = pony_flash.images.generate(
     model="nanobanana-pro",
     prompt="Same scene but in winter with snow",
     images=[Path("summer_photo.jpg")],

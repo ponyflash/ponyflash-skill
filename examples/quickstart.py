@@ -8,20 +8,20 @@ Run:
 
 from ponyflash import PonyFlash, InsufficientCreditsError
 
-client = PonyFlash()
+pony_flash = PonyFlash()
 
 # ── Check balance ──
-balance = client.account.credits()
+balance = pony_flash.account.credits()
 print(f"Credit balance: {balance.balance} {balance.currency}")
 
 # ── List models ──
-page = client.models.list()
+page = pony_flash.models.list()
 for m in page.items:
     print(f"  {m.id} ({m.type})")
 
 # ── Generate an image ──
 try:
-    gen = client.images.generate(
+    gen = pony_flash.images.generate(
         model="nanobanana-pro",
         prompt="A magical forest with glowing mushrooms",
         size="2K",
@@ -30,12 +30,12 @@ try:
     print(f"Credits used: {gen.credits}")
 except InsufficientCreditsError as e:
     print(f"Not enough credits (balance={e.balance}, required={e.required})")
-    link = client.account.recharge()
+    link = pony_flash.account.recharge()
     print(f"Recharge at: {link.recharge_url}")
 
 # ── Generate a video ──
 try:
-    gen = client.video.generate(
+    gen = pony_flash.video.generate(
         model="seedance-1.5-pro",
         prompt="A timelapse of clouds moving over a mountain",
         duration=5,
@@ -47,7 +47,7 @@ except InsufficientCreditsError as e:
 
 # ── Generate speech ──
 try:
-    gen = client.speech.generate(
+    gen = pony_flash.speech.generate(
         model="speech-2.8-hd",
         input="Welcome to PonyFlash, the AI media generation platform.",
         voice="English_Graceful_Lady",
@@ -58,7 +58,7 @@ except InsufficientCreditsError as e:
 
 # ── Generate music ──
 try:
-    gen = client.music.generate(
+    gen = pony_flash.music.generate(
         model="music-2.5",
         prompt="A calm acoustic guitar melody",
         instrumental=True,

@@ -5,7 +5,7 @@ Dual-branch diffusion transformer that generates audio and video simultaneously 
 ## Supported parameters via PonyFlash SDK
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="seedance-1.5-pro",
     prompt="A dancer performing in the rain",
     duration=5,            # 2-12 seconds
@@ -37,7 +37,7 @@ English, Mandarin Chinese, Japanese, Korean, Spanish, Portuguese, Indonesian dia
 ## Example: text-to-video
 
 ```python
-gen = client.video.generate(
+gen = pony_flash.video.generate(
     model="seedance-1.5-pro",
     prompt="A cat playing piano, close-up, cinematic lighting",
     duration=8,
@@ -49,7 +49,7 @@ print(gen.url)
 
 ```python
 with open("photo.jpg", "rb") as f:
-    gen = client.video.generate(
+    gen = pony_flash.video.generate(
         model="seedance-1.5-pro",
         first_frame=f,
         prompt="Camera slowly zooms in, leaves rustling in wind",
@@ -62,7 +62,7 @@ print(gen.url)
 
 ```python
 with open("start.jpg", "rb") as s, open("end.jpg", "rb") as e:
-    gen = client.video.generate(
+    gen = pony_flash.video.generate(
         model="seedance-1.5-pro",
         first_frame=s,
         last_frame=e,
