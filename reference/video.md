@@ -14,7 +14,7 @@ Submits and polls until completion.
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `model` | `str` | Yes | — | Model ID (e.g. `"video-gen-1"`, `"omnihuman-1"`, `"motion-transfer-1"`) |
+| `model` | `str` | Yes | — | Model ID (e.g. `"seedance-1.5-pro"`, `"veo-3.1"`, `"omnihuman-1.5"`, `"motion-transfer-1"`) |
 | `prompt` | `str` | No | — | Text description |
 | `size` | `str` | No | — | Output size (e.g. `"1920x1080"`) |
 | `duration` | `int` | No | — | Duration in seconds |
@@ -37,20 +37,26 @@ Submits and polls until completion.
 
 | Mode | Required params | Model example |
 |---|---|---|
-| Text-to-video | `model`, `prompt` | `video-gen-1` |
-| First-frame to video | `model`, `first_frame`, `prompt` | `video-gen-1` |
-| OmniHuman | `model`, `first_frame`, `audio` | `omnihuman-1` |
+| Text-to-video | `model`, `prompt` | `seedance-1.5-pro`, `veo-3.1` |
+| First-frame to video | `model`, `first_frame`, `prompt` | `seedance-1.5-pro`, `veo-3.1` |
+| OmniHuman | `model`, `first_frame`, `audio` | `omnihuman-1.5` |
 | Motion Transfer | `model`, `first_frame`, `motion_video` | `motion-transfer-1` |
 
 ## Example
 
 ```python
 gen = client.video.generate(
-    model="video-gen-1",
+    model="seedance-1.5-pro",
     prompt="Ocean waves crashing on a beach",
-    size="1920x1080",
-    duration=8,
+    duration=5,
 )
 print(gen.url)
 print(f"Credits: {gen.credits}")
 ```
+
+## Available models
+
+- [seedance-1.5-pro](models/seedance-1.5-pro.md) — 720p, 2-12s, auto-generated audio, multi-language
+- [veo-3.1](models/veo-3.1.md) — 720p/1080p, 4/6/8s, reference images, English only
+
+For the full model list, see [models/INDEX.md](models/INDEX.md).

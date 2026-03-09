@@ -14,13 +14,13 @@ Submits and polls until completion.
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `model` | `str` | Yes | — | Model ID (e.g. `"speech-v1"`) |
+| `model` | `str` | Yes | — | Model ID (e.g. `"speech-2.8-hd"`) |
 | `input` | `str` | Yes | — | Text to synthesize |
-| `voice` | `str` | Yes | — | Voice ID (e.g. `"alloy"`, `"nova"`) |
+| `voice` | `str` | Yes | — | Voice ID (e.g. `"English_Graceful_Lady"`, `"English_Insightful_Speaker"`) |
 | `language` | `str` | No | — | Language code |
 | `speed` | `float` | No | — | Playback speed multiplier |
 | `pitch` | `int` | No | — | Pitch adjustment |
-| `emotion` | `str` | No | — | Emotion (e.g. `"excited"`, `"calm"`) |
+| `emotion` | `str` | No | — | Emotion (e.g. `"happy"`, `"sad"`, `"calm"`, `"angry"`, `"surprised"`) |
 | `instructions` | `str` | No | — | Style instructions |
 | `voice_settings` | `VoiceSettings` | No | — | Fine-grained voice control |
 | `sample_rate` | `int` | No | — | Audio sample rate in Hz |
@@ -46,11 +46,17 @@ Submits and polls until completion.
 
 ```python
 gen = client.speech.generate(
-    model="speech-v1",
+    model="speech-2.8-hd",
     input="Hello, welcome to PonyFlash!",
-    voice="alloy",
+    voice="English_Graceful_Lady",
     speed=1.0,
     format="mp3",
 )
 print(gen.url)
 ```
+
+## Available models
+
+- [speech-2.8-hd](models/speech-2.8-hd.md) — 40+ languages, 300+ voices, interjection tags, emotion control
+
+For the full model list, see [models/INDEX.md](models/INDEX.md).

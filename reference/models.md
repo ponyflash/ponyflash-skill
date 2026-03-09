@@ -86,7 +86,7 @@ page = client.models.list(type="video")
 for m in page.items:
     print(f"{m.id}: sizes={m.supported_sizes}, durations={m.supported_durations}")
 
-detail = client.models.get("omnihuman-1")
+detail = client.models.get("omnihuman-1.5")
 for mode in detail.supported_modes:
     print(f"  {mode.name}: required={mode.required_fields}")
 ```

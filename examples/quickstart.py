@@ -22,9 +22,9 @@ for m in page.items:
 # ── Generate an image ──
 try:
     gen = client.images.generate(
-        model="image-pro-1",
+        model="nanobanana-pro",
         prompt="A magical forest with glowing mushrooms",
-        size="1024x1024",
+        size="2K",
     )
     print(f"Image URL: {gen.url}")
     print(f"Credits used: {gen.credits}")
@@ -36,9 +36,8 @@ except InsufficientCreditsError as e:
 # ── Generate a video ──
 try:
     gen = client.video.generate(
-        model="video-gen-1",
+        model="seedance-1.5-pro",
         prompt="A timelapse of clouds moving over a mountain",
-        size="1920x1080",
         duration=5,
     )
     print(f"Video URL: {gen.url}")
@@ -49,9 +48,9 @@ except InsufficientCreditsError as e:
 # ── Generate speech ──
 try:
     gen = client.speech.generate(
-        model="speech-v1",
+        model="speech-2.8-hd",
         input="Welcome to PonyFlash, the AI media generation platform.",
-        voice="alloy",
+        voice="English_Graceful_Lady",
     )
     print(f"Speech URL: {gen.url}")
 except InsufficientCreditsError as e:
@@ -60,7 +59,7 @@ except InsufficientCreditsError as e:
 # ── Generate music ──
 try:
     gen = client.music.generate(
-        model="music-gen-1",
+        model="music-2.5",
         prompt="A calm acoustic guitar melody",
         instrumental=True,
         duration=30,

@@ -14,7 +14,7 @@ Submits and polls until completion. Returns `Generation` with output URLs.
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `model` | `str` | Yes | — | Model ID (e.g. `"image-pro-1"`) |
+| `model` | `str` | Yes | — | Model ID (e.g. `"nanobanana-pro"`, `"nanobanana"`) |
 | `prompt` | `str` | Yes | — | Text description of the image to generate |
 | `size` | `str` | No | — | Output size (e.g. `"1024x1024"`, `"512x512"`) |
 | `n` | `int` | No | — | Number of images to generate |
@@ -63,11 +63,17 @@ Submits and polls until completion. Returns `Generation` with output URLs.
 
 ```python
 gen = client.images.generate(
-    model="image-pro-1",
+    model="nanobanana-pro",
     prompt="A cyberpunk cityscape at night",
-    size="1024x1024",
+    size="2K",
     n=2,
 )
 for url in gen.urls:
     print(url)
 ```
+
+## Available models
+
+- [nanobanana-pro / nanobanana](models/nanobanana-pro.md) — sizes (1K/2K/4K), aspect ratios, credit costs, image-to-image
+
+For the full model list, see [models/INDEX.md](models/INDEX.md).

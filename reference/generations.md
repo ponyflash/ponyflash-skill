@@ -40,7 +40,7 @@ Convenience: `gen.url`, `gen.urls`, `gen.credits`.
 ## Example
 
 ```python
-resp = client.images.submit(model="image-pro-1", prompt="A cat")
+resp = client.images.submit(model="nanobanana-pro", prompt="A cat")
 print(f"Submitted: {resp.request_id}")
 
 import time

@@ -14,7 +14,7 @@ Submits and polls until completion.
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `model` | `str` | Yes | — | Model ID (e.g. `"music-gen-1"`) |
+| `model` | `str` | Yes | — | Model ID (e.g. `"music-2.5"`) |
 | `prompt` | `str` | Yes | — | Description of the music to generate |
 | `lyrics` | `str` | No | — | Song lyrics |
 | `title` | `str` | No | — | Song title |
@@ -37,10 +37,16 @@ Submits and polls until completion.
 
 ```python
 gen = client.music.generate(
-    model="music-gen-1",
+    model="music-2.5",
     prompt="A chill lo-fi hip hop beat for studying",
     instrumental=True,
     duration=60,
 )
 print(gen.url)
 ```
+
+## Available models
+
+- [music-2.5](models/music-2.5.md) — lyrics structure tags, instrumental mode, song continuation
+
+For the full model list, see [models/INDEX.md](models/INDEX.md).

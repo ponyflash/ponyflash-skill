@@ -28,7 +28,7 @@ export PONYFLASH_API_KEY="pf_xxx"
 | Capability | Resource | Description |
 |---|---|---|
 | Image generation | `client.images` | Text-to-image, image editing with mask/reference images |
-| Video generation | `client.video` | Text-to-video, first-frame-to-video, OmniHuman (portrait+audio), Motion Transfer |
+| Video generation | `client.video` | Text-to-video, first-frame-to-video, OmniHuman, Motion Transfer |
 | Speech synthesis | `client.speech` | Text-to-speech with voice control, emotion, speed, pitch |
 | Music generation | `client.music` | Text-to-music with lyrics, style, instrumental mode, continuation |
 | Model listing | `client.models` | List available models, get model details and supported modes |
@@ -48,7 +48,24 @@ client = PonyFlash(api_key="pf_xxx")
 
 Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted. Base URL defaults to `https://api.ponyflash.com/v1`; override with `base_url` param or `PONYFLASH_BASE_URL` env var.
 
+### Async client
 
+```python
+from ponyflash import AsyncPonyFlash
+
+client = AsyncPonyFlash(api_key="pf_xxx")
+gen = await client.images.generate(model="nanobanana-pro", prompt="A sunset")
+print(gen.url)
+```
+
+Every sync method has an async counterpart with the same signature.
+
+### submit() vs generate()
+
+- `submit()` fires the request and returns `CreateResponse` immediately (contains `request_id`).
+- `generate()` calls `submit()` then polls until completion, returning `Generation` with output URLs and usage.
+
+Use `submit()` when you want to manage polling yourself; use `generate()` for the common case.
 
 ### FileInput — zero-friction file handling
 
@@ -74,217 +91,76 @@ Convenience properties:
 - `gen.urls` — list of all output URLs
 - `gen.credits` — credits consumed
 
-## Usage examples
+## Quick examples (one per category)
 
-### Text-to-image
+### Image
 
 ```python
 gen = client.images.generate(
-    model="image-pro-1",
+    model="nanobanana-pro",
     prompt="A sunset over mountains",
-    size="1024x1024",
-)
-print(gen.url)
-print(f"Credits: {gen.credits}")
-```
-
-### Image editing with reference images
-
-```python
-from pathlib import Path
-
-gen = client.images.generate(
-    model="image-edit-1",
-    prompt="Remove the background",
-    images=[Path("photo.jpg")],
-    mask=open("mask.png", "rb"),
+    size="2K",
 )
 print(gen.url)
 ```
 
-### Multiple images
-
-```python
-gen = client.images.generate(
-    model="image-pro-1",
-    prompt="A cat in space",
-    n=4,
-    size="512x512",
-)
-for url in gen.urls:
-    print(url)
-```
-
-### Text-to-video
+### Video
 
 ```python
 gen = client.video.generate(
-    model="video-gen-1",
+    model="seedance-1.5-pro",
     prompt="A timelapse of a city at night",
-    size="1920x1080",
-    duration=8,
+    duration=5,
 )
 print(gen.url)
 ```
 
-### First-frame to video (local file)
-
-```python
-with open("my_photo.jpg", "rb") as f:
-    gen = client.video.generate(
-        model="video-gen-1",
-        first_frame=f,
-        prompt="Camera slowly zooms in",
-    )
-```
-
-### First-frame to video (URL)
-
-```python
-gen = client.video.generate(
-    model="video-gen-1",
-    first_frame="https://example.com/photo.jpg",
-    prompt="Camera slowly zooms in",
-)
-```
-
-### OmniHuman — portrait + audio to talking video
-
-```python
-with open("portrait.jpg", "rb") as img, open("speech.wav", "rb") as audio:
-    gen = client.video.generate(
-        model="omnihuman-1",
-        first_frame=img,
-        audio=audio,
-        size="1280x720",
-    )
-```
-
-### Motion Transfer — person image + dance video
-
-```python
-with open("avatar.jpg", "rb") as img, open("dance.mp4", "rb") as vid:
-    gen = client.video.generate(
-        model="motion-transfer-1",
-        first_frame=img,
-        motion_video=vid,
-        size="1280x720",
-    )
-```
-
-### Text-to-speech
+### Speech
 
 ```python
 gen = client.speech.generate(
-    model="speech-v1",
+    model="speech-2.8-hd",
     input="Hello, welcome to PonyFlash!",
-    voice="alloy",
+    voice="English_Graceful_Lady",
 )
 print(gen.url)
 ```
 
-### Speech with full voice control
-
-```python
-gen = client.speech.generate(
-    model="speech-v1",
-    input="Breaking news: AI can now compose music.",
-    voice="nova",
-    language="en",
-    speed=1.2,
-    pitch=2,
-    emotion="excited",
-    instructions="Speak like a news anchor",
-    voice_settings={
-        "stability": 0.8,
-        "similarity_boost": 0.9,
-        "style": 0.5,
-        "use_speaker_boost": True,
-    },
-    sample_rate=44100,
-    format="mp3",
-)
-```
-
-### Music generation
+### Music
 
 ```python
 gen = client.music.generate(
-    model="music-gen-1",
+    model="music-2.5",
     prompt="An upbeat electronic dance track",
     duration=30,
 )
 print(gen.url)
 ```
 
-### Music with lyrics and style
-
-```python
-gen = client.music.generate(
-    model="music-gen-1",
-    prompt="A romantic ballad about the ocean",
-    lyrics="Waves crash upon the shore\nWhispering forevermore",
-    title="Ocean Whispers",
-    style="pop ballad",
-    duration=60,
-)
-```
-
-### Instrumental music
-
-```python
-gen = client.music.generate(
-    model="music-gen-1",
-    prompt="Lo-fi hip hop study beats",
-    instrumental=True,
-    duration=120,
-)
-```
-
-### Continue / extend a song
-
-```python
-gen = client.music.generate(
-    model="music-gen-1",
-    prompt="Continue with a guitar solo",
-    reference_audio=open("my_song.mp3", "rb"),
-    continue_at=45.0,
-)
-```
-
-### List available models
+### List models
 
 ```python
 page = client.models.list()
 for model in page.items:
     print(f"{model.id} ({model.type})")
-
-page = client.models.list(type="image")
 ```
 
-### Get model details
-
-```python
-detail = client.models.get("image-pro-1")
-print(detail.supported_sizes)
-print(detail.supported_modes)
-```
-
-### Check credit balance
+### Check balance
 
 ```python
 balance = client.account.credits()
 print(f"Balance: {balance.balance} {balance.currency}")
 ```
 
-### Get recharge link
+### Non-blocking submit + manual polling
 
 ```python
-resp = client.account.recharge(amount=100)
-print(resp.recharge_url)
+resp = client.images.submit(model="nanobanana-pro", prompt="A cat")
+gen = client.generations.wait(resp.request_id, timeout=60)
+print(gen.url)
 ```
 
-### Async example — parallel generation
+### Async parallel generation
 
 ```python
 import asyncio
@@ -292,10 +168,9 @@ from ponyflash import AsyncPonyFlash
 
 async def main():
     client = AsyncPonyFlash()
-
     img, vid = await asyncio.gather(
-        client.images.generate(model="image-pro-1", prompt="A cat"),
-        client.video.generate(model="video-gen-1", prompt="A flying cat", duration=5),
+        client.images.generate(model="nanobanana-pro", prompt="A cat"),
+        client.video.generate(model="seedance-1.5-pro", prompt="A flying cat", duration=5),
     )
     print(f"Image: {img.url}")
     print(f"Video: {vid.url}")
@@ -303,15 +178,55 @@ async def main():
 asyncio.run(main())
 ```
 
+## Error handling
+
+```python
+from ponyflash import (
+    PonyFlash,
+    InsufficientCreditsError,
+    RateLimitError,
+    GenerationFailedError,
+    GenerationTimeoutError,
+    AuthenticationError,
+)
+
+client = PonyFlash()
+
+try:
+    gen = client.images.generate(model="nanobanana-pro", prompt="A cat")
+except AuthenticationError:
+    print("Invalid API key")
+except InsufficientCreditsError as e:
+    print(f"Not enough credits. Balance: {e.balance}, required: {e.required}")
+    link = client.account.recharge()
+    print(f"Recharge at: {link.recharge_url}")
+except RateLimitError:
+    print("Rate limited — wait and retry")
+except GenerationFailedError as e:
+    print(f"Generation failed: {e.generation.error.code}")
+except GenerationTimeoutError as e:
+    print(f"Timed out after {e.timeout}s, check: client.generations.get('{e.request_id}')")
+```
+
+## More examples
+
+For advanced usage (image editing, OmniHuman, Motion Transfer, lyrics with structure tags, voice control, song continuation, etc.):
+See [examples/advanced.md](examples/advanced.md)
+
 ## API reference (detailed signatures)
 
-For complete method signatures, parameter types, and return type fields, see:
+For complete method signatures, parameter types, and return type fields:
 
-- **Image generation**: See [reference/images.md](reference/images.md)
-- **Video generation**: See [reference/video.md](reference/video.md)
-- **Speech synthesis**: See [reference/speech.md](reference/speech.md)
-- **Music generation**: See [reference/music.md](reference/music.md)
-- **Model listing**: See [reference/models.md](reference/models.md)
-- **File management**: See [reference/files.md](reference/files.md)
-- **Generation polling**: See [reference/generations.md](reference/generations.md)
-- **Account / credits**: See [reference/account.md](reference/account.md)
+- **Image generation**: [reference/images.md](reference/images.md)
+- **Video generation**: [reference/video.md](reference/video.md)
+- **Speech synthesis**: [reference/speech.md](reference/speech.md)
+- **Music generation**: [reference/music.md](reference/music.md)
+- **Model listing**: [reference/models.md](reference/models.md)
+- **File management**: [reference/files.md](reference/files.md)
+- **Generation polling**: [reference/generations.md](reference/generations.md)
+- **Account / credits**: [reference/account.md](reference/account.md)
+
+## Model catalog
+
+For all available models and their specific parameters, capabilities, and examples:
+See [reference/models/INDEX.md](reference/models/INDEX.md)
