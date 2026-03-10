@@ -29,7 +29,7 @@ export PONYFLASH_API_KEY="pf_xxx"
 |---|---|---|
 | Image generation | `pony_flash.images` | Text-to-image, image editing with mask/reference images |
 | Video generation | `pony_flash.video` | Text-to-video, first-frame-to-video, OmniHuman, Motion Transfer |
-| Speech synthesis | `pony_flash.speech` | Text-to-speech with voice control, emotion, speed, pitch |
+| Speech synthesis | `pony_flash.speech` | Text-to-speech with voice cloning, emotion control, speed, pitch |
 | Music generation | `pony_flash.music` | Text-to-music with lyrics, style, instrumental mode, continuation |
 | Model listing | `pony_flash.models` | List available models, get model details and supported modes |
 | File management | `pony_flash.files` | Upload, list, get, delete files |
