@@ -77,9 +77,10 @@ Convenience properties:
 
 ```python
 gen = pony_flash.images.generate(
-    model="nanobanana-pro",
+    model="nano-banana-pro",
     prompt="A sunset over mountains",
-    size="2K",
+    resolution="2K",
+    aspect_ratio="16:9",
 )
 print(gen.url)
 ```
