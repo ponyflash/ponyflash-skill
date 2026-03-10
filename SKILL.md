@@ -13,21 +13,24 @@ metadata:
 
 # PonyFlash SDK
 
-## Step 0: Get your API Key
+## Step 0: Get your API Key (MANDATORY — DO NOT SKIP)
 
-Before generating any content, the user needs a PonyFlash API key and credits.
+> **CRITICAL**: This skill CANNOT function without a valid PonyFlash API key. You MUST complete this step before calling ANY PonyFlash SDK method. Do NOT attempt to generate images, videos, speech, or music without first obtaining the API key from the user. If the user asks to generate content and no API key has been provided, ALWAYS stop and complete this step first.
 
-**If no API key is configured (environment variable `PONYFLASH_API_KEY` is not set and no key was passed to the client), guide the user through this flow:**
+**Every time this skill is activated, check whether `PONYFLASH_API_KEY` is set in the environment. If not, you MUST immediately tell the user:**
 
-1. Ask the user: "To use PonyFlash, you need an API key. Do you already have one?"
-2. If **no** — tell the user:
-   - Visit **https://test.ponyflash.com** to create an account
-   - Go to **https://test.ponyflash.com/api-key** to generate an API key
-   - Top up credits at **https://test.ponyflash.com/usage** (new accounts include free trial credits)
-   - Copy the API key (starts with `pf_`) and paste it back here
-3. If **yes** — ask the user to provide the key
+---
 
-Once the user provides the key, set it up:
+To use PonyFlash, you need an API key. Please complete these steps:
+
+1. **Register / log in** at **https://test.ponyflash.com**
+2. **Get your API key** at **https://test.ponyflash.com/api-key** (the key starts with `pf_`)
+3. **Check your credits** at **https://test.ponyflash.com/usage** (new accounts include free trial credits)
+4. **Paste your API key back here** so I can configure it
+
+---
+
+**Do NOT proceed until the user provides the key.** Once received, set it up:
 
 ```bash
 export PONYFLASH_API_KEY="pf_xxx"
@@ -39,7 +42,7 @@ Then install the SDK:
 pip install ponyflash
 ```
 
-**Important**: Always verify the key works before proceeding with any generation task:
+**Always verify the key works before any generation task:**
 
 ```python
 from ponyflash import PonyFlash
@@ -49,9 +52,9 @@ balance = pony_flash.account.credits()
 print(f"Balance: {balance.balance} {balance.currency}")
 ```
 
-If the balance is zero or the key is invalid, direct the user to:
-- **Get / regenerate API key**: https://test.ponyflash.com/api-key
-- **Top up credits**: https://test.ponyflash.com/usage
+If verification fails:
+- **Key invalid or missing** → direct user to https://test.ponyflash.com/api-key
+- **Balance is zero** → direct user to https://test.ponyflash.com/usage to top up credits
 
 ## What this SDK can do
 
