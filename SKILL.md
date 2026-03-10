@@ -13,19 +13,45 @@ metadata:
 
 # PonyFlash SDK
 
-## Step 0: Install
+## Step 0: Get your API Key
 
-Before doing anything, ensure the SDK is installed:
+Before generating any content, the user needs a PonyFlash API key and credits.
+
+**If no API key is configured (environment variable `PONYFLASH_API_KEY` is not set and no key was passed to the client), guide the user through this flow:**
+
+1. Ask the user: "To use PonyFlash, you need an API key. Do you already have one?"
+2. If **no** — tell the user:
+   - Visit **https://test.ponyflash.com** to create an account
+   - Go to **https://test.ponyflash.com/api-key** to generate an API key
+   - Top up credits at **https://test.ponyflash.com/usage** (new accounts include free trial credits)
+   - Copy the API key (starts with `pf_`) and paste it back here
+3. If **yes** — ask the user to provide the key
+
+Once the user provides the key, set it up:
+
+```bash
+export PONYFLASH_API_KEY="pf_xxx"
+```
+
+Then install the SDK:
 
 ```bash
 pip install ponyflash
 ```
 
-Then set the API key via environment variable or pass it directly:
+**Important**: Always verify the key works before proceeding with any generation task:
 
-```bash
-export PONYFLASH_API_KEY="pf_xxx"
+```python
+from ponyflash import PonyFlash
+
+pony_flash = PonyFlash(api_key="<key from user>")
+balance = pony_flash.account.credits()
+print(f"Balance: {balance.balance} {balance.currency}")
 ```
+
+If the balance is zero or the key is invalid, direct the user to:
+- **Get / regenerate API key**: https://test.ponyflash.com/api-key
+- **Top up credits**: https://test.ponyflash.com/usage
 
 ## What this SDK can do
 
@@ -156,11 +182,13 @@ pony_flash = PonyFlash()
 try:
     gen = pony_flash.images.generate(model="nanobanana-pro", prompt="A cat")
 except AuthenticationError:
-    print("Invalid API key")
+    # API key is missing or invalid — guide user to get one
+    print("Invalid or missing API key.")
+    print("Get your API key at: https://test.ponyflash.com/api-key")
 except InsufficientCreditsError as e:
+    # Out of credits — guide user to top up
     print(f"Not enough credits. Balance: {e.balance}, required: {e.required}")
-    link = pony_flash.account.recharge()
-    print(f"Recharge at: {link.recharge_url}")
+    print("Top up credits at: https://test.ponyflash.com/usage")
 except RateLimitError:
     print("Rate limited — wait and retry")
 except GenerationFailedError as e:
