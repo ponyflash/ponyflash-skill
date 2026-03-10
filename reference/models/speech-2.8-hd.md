@@ -98,7 +98,7 @@ print(gen.url)
 ```python
 gen = pony_flash.speech.generate(
     model="speech-2.8-hd",
-    input="你好世界！Hello World! こんにちは！",
+    input="Hello World! Welcome to PonyFlash!",
     voice="English_Graceful_Lady",
     language="auto",
 )

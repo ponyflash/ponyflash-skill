@@ -5,6 +5,10 @@ description: >-
   Use when the user asks to create, generate, or produce images, videos, speech,
   audio, music, or any AI-generated media content. Also use when checking PonyFlash
   account balance, listing models, or managing generated files.
+license: MIT
+metadata:
+  author: ponyflash
+  version: "1.0"
 ---
 
 # PonyFlash SDK
