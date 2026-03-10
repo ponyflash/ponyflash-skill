@@ -10,7 +10,9 @@ All models accessible via `pony_flash.models.list()` and `pony_flash.models.get(
 | `nano-banana-2` | image | 7/10/15 credits (1K/2K/4K) | [nano-banana-2.md](nano-banana-2.md) |
 | `seedream-5-lite` | image | 4 credits/image | [seedream-5-lite.md](seedream-5-lite.md) |
 | `image-pro-1` | image | 20 credits/request | *(placeholder, not yet connected)* |
-| `seedance-1.5-pro` | video | 3 credits/second | [seedance-1.5-pro.md](seedance-1.5-pro.md) |
+| `seedance-1.5-pro` | video | 1-12 c/s (by resolution+audio) | [seedance-1.5-pro.md](seedance-1.5-pro.md) |
+| `veo-3.1` | video | 20-40 c/s (by audio) | [veo-3.1.md](veo-3.1.md) |
+| `veo-3.1-fast` | video | 10-15 c/s (by audio) | [veo-3.1-fast.md](veo-3.1-fast.md) |
 | `omnihuman-1.5` | video | 16 credits/second | *(see SKILL.md for usage)* |
 | `speech-2.8-hd` | speech | 1 credit/request | [speech-2.8-hd.md](speech-2.8-hd.md) |
 | `speech-2.8-turbo` | speech | 1 credit/request | [speech-2.8-turbo.md](speech-2.8-turbo.md) |
@@ -100,14 +102,46 @@ Extra parameters via `**extra_body`: `sequential_image_generation` (`disabled` (
 
 ### seedance-1.5-pro
 
-ByteDance's video generation model. Text-to-video and image-to-video.
+ByteDance's cinema-quality video model. Synchronized audio+video, lip-sync, multilingual.
 
 | Field | Values |
 |---|---|
-| **size** | `1280x720`, `720x1280`, `1920x1080`, `1080x1920`, `1080x1080` |
-| **duration** | `4`, `5`, `8`, `10`, `12` seconds |
-| **quality** | `standard`, `high`, `auto` |
-| **Pricing** | 3 credits/second |
+| **duration** | 2-12 (any integer) |
+| **resolution** | `480p`, `720p` (default), `1080p` |
+| **aspect_ratio** | `16:9`, `4:3`, `1:1`, `3:4`, `9:16`, `21:9`, `9:21` |
+| **generate_audio** | bool (default false) |
+| **first_frame** | Starting image (FileInput) |
+| **last_frame** | Ending image (FileInput) |
+| **Pricing** | 480p: 3/1 c/s, 720p: 5/3 c/s, 1080p: 12/6 c/s (audio/silent) |
+
+Extra via `**extra_body`: `camera_fixed` (bool)
+
+### veo-3.1
+
+Google's SOTA video model. Synchronized audio, reference images, first/last frame, 720p/1080p.
+
+| Field | Values |
+|---|---|
+| **duration** | `4`, `6`, `8` |
+| **resolution** | `720p`, `1080p` (default) |
+| **aspect_ratio** | `16:9` (default), `9:16` |
+| **generate_audio** | bool (default true) |
+| **first_frame** | Starting image (FileInput) |
+| **last_frame** | Ending image (FileInput) |
+| **reference_images** | Up to 3 images (FileInput[]) |
+| **negative_prompt** | What to exclude |
+| **Pricing** | with_audio: 40 c/s, without: 20 c/s |
+
+Extra via `**extra_body`: `seed` (int)
+
+### veo-3.1-fast
+
+Faster Veo 3.1. Same params, lower cost. Best for iteration.
+
+| Field | Values |
+|---|---|
+| Same as veo-3.1 | All params identical |
+| **Pricing** | with_audio: 15 c/s, without: 10 c/s |
 
 ### omnihuman-1.5
 

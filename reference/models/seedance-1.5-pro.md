@@ -1,78 +1,59 @@
 # seedance-1.5-pro — Video Generation (ByteDance)
 
-Dual-branch diffusion transformer that generates audio and video simultaneously in a shared latent space. Ensures precise lip-sync and natural synchronized sound effects.
+Cinema-quality video with synchronized audio, lip-sync, multilingual support. Dual-branch architecture generates audio+video simultaneously.
 
-## Supported parameters via PonyFlash SDK
+## Parameters
 
-```python
-gen = pony_flash.video.generate(
-    model="seedance-1.5-pro",
-    prompt="A dancer performing in the rain",
-    duration=5,            # 2-12 seconds
-)
-```
+| Parameter | Type | Required | Default | Values |
+|---|---|---|---|---|
+| `prompt` | str | Yes* | — | Text description (*or first_frame required) |
+| `duration` | int | No | 8 | 2-12 (any integer) |
+| `resolution` | str | No | "720p" | `"480p"`, `"720p"`, `"1080p"` |
+| `aspect_ratio` | str | No | "16:9" | `"16:9"`, `"4:3"`, `"1:1"`, `"3:4"`, `"9:16"`, `"21:9"`, `"9:21"` |
+| `generate_audio` | bool | No | false | Synchronized audio generation |
+| `first_frame` | FileInput | No | — | Starting image for image-to-video |
+| `last_frame` | FileInput | No | — | Ending image |
 
-## Key specifications
+Extra via `**extra_body`: `camera_fixed` (bool, lock camera to reduce motion blur)
 
-| Parameter | Values |
-|---|---|
-| Duration | 2–12 seconds (default 5) |
-| Resolution | 720p |
-| Frame rate | 24 FPS |
-| Aspect ratio | 16:9 (default, ignored when using input image) |
-| Audio | Auto-generated synchronized audio (enabled by default) |
+## Pricing
 
-## Supported languages
-
-English, Mandarin Chinese, Japanese, Korean, Spanish, Portuguese, Indonesian dialects.
-
-## Generation modes
-
-| Mode | Required params | Description |
+| resolution | with_audio | without_audio |
 |---|---|---|
-| Text-to-video | `prompt` | Generate video from text |
-| Image-to-video | `first_frame` + `prompt` | Animate a starting image |
-| First+last frame | `first_frame` + `last_frame` + `prompt` | Control start and end frames |
+| 480p | 3 credits/s | 1 credit/s |
+| 720p | 5 credits/s | 3 credits/s |
+| 1080p | 12 credits/s | 6 credits/s |
 
-## Example: text-to-video
+Example: 8s 720p with audio = 5 * 8 = 40 credits
+
+## Examples
 
 ```python
+# Text-to-video
 gen = pony_flash.video.generate(
     model="seedance-1.5-pro",
-    prompt="A cat playing piano, close-up, cinematic lighting",
-    duration=8,
+    prompt="A cinematic sunrise over mountains, slow camera pan",
+    duration=5,
+    resolution="720p",
+    aspect_ratio="16:9",
 )
-print(gen.url)
+
+# Image-to-video with audio
+gen = pony_flash.video.generate(
+    model="seedance-1.5-pro",
+    prompt="Person starts talking to the camera",
+    first_frame=open("portrait.jpg", "rb"),
+    duration=8,
+    resolution="1080p",
+    generate_audio=True,
+)
+
+# Budget mode: 480p, short, no audio
+gen = pony_flash.video.generate(
+    model="seedance-1.5-pro",
+    prompt="Quick product demo",
+    duration=3,
+    resolution="480p",
+    generate_audio=False,
+)
 ```
-
-## Example: image-to-video
-
-```python
-with open("photo.jpg", "rb") as f:
-    gen = pony_flash.video.generate(
-        model="seedance-1.5-pro",
-        first_frame=f,
-        prompt="Camera slowly zooms in, leaves rustling in wind",
-        duration=5,
-    )
-print(gen.url)
-```
-
-## Example: first + last frame
-
-```python
-with open("start.jpg", "rb") as s, open("end.jpg", "rb") as e:
-    gen = pony_flash.video.generate(
-        model="seedance-1.5-pro",
-        first_frame=s,
-        last_frame=e,
-        prompt="Smooth transition between scenes",
-        duration=5,
-    )
-```
-
-## Notes
-
-- Audio is generated simultaneously with video (lip-sync, sound effects).
-- The `size` parameter is not used for this model; output is always 720p.
-- Aspect ratio is 16:9 by default; ignored when an input image is provided (inherits image aspect ratio).

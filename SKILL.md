@@ -89,9 +89,12 @@ print(gen.url)
 
 ```python
 gen = pony_flash.video.generate(
-    model="seedance-1.5-pro",
+    model="veo-3.1-fast",
     prompt="A timelapse of a city at night",
-    duration=5,
+    duration=4,
+    resolution="720p",
+    aspect_ratio="16:9",
+    generate_audio=False,
 )
 print(gen.url)
 ```

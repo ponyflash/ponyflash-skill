@@ -1,81 +1,63 @@
 # veo-3.1 — Video Generation (Google)
 
-Google's high-quality video generation model. Supports text-to-video, image-to-video, first+last frame, video extension, and reference image guidance.
+Google's state-of-the-art video model. Synchronized audio, reference images, first/last frame control, 720p/1080p.
 
-## Supported parameters via PonyFlash SDK
+## Parameters
 
-```python
-gen = pony_flash.video.generate(
-    model="veo-3.1",
-    prompt="Ocean waves crashing on a rocky coastline at sunset",
-    size="1920x1080",     # 720p or 1080p
-    duration=8,           # 4, 6, or 8 seconds
-)
-```
+| Parameter | Type | Required | Default | Values |
+|---|---|---|---|---|
+| `prompt` | str | Yes | — | Text description |
+| `duration` | int | No | 8 | `4`, `6`, `8` |
+| `resolution` | str | No | "1080p" | `"720p"`, `"1080p"` |
+| `aspect_ratio` | str | No | "16:9" | `"16:9"`, `"9:16"` |
+| `generate_audio` | bool | No | true | Synchronized audio generation |
+| `first_frame` | FileInput | No | — | Starting image |
+| `last_frame` | FileInput | No | — | Ending image (smooth transition) |
+| `reference_images` | List[FileInput] | No | — | Up to 3 reference images |
+| `negative_prompt` | str | No | — | What to exclude |
 
-## Key specifications
+Extra via `**extra_body`: `seed` (int)
 
-| Parameter | Values |
-|---|---|
-| Resolution | 720p, 1080p |
-| Duration | 4, 6, or 8 seconds |
-| Frame rate | 24 FPS |
-| Aspect ratios | 16:9 (landscape), 9:16 (portrait) |
-| Output format | MP4 (video/mp4) |
-| Max outputs per request | 4 videos |
-| Max image input size | 20 MB |
-| Language | English only |
+## Pricing
 
-## Generation modes
-
-| Mode | Required params | Notes |
+| | with_audio | without_audio |
 |---|---|---|
-| Text-to-video | `prompt` | All durations supported |
-| Image-to-video | `first_frame` + `prompt` | Reference-image-to-video supports 8s only |
-| First+last frame | `first_frame` + `last_frame` + `prompt` | |
-| Video extension | `video` + `prompt` | Extend an existing video |
-| Reference images | `reference_images` + `prompt` | Up to 3 asset images or 1 style image |
+| Per second | 40 credits | 20 credits |
+| 4s video | 160 credits | 80 credits |
+| 6s video | 240 credits | 120 credits |
+| 8s video | 320 credits | 160 credits |
 
-## Example: text-to-video (1080p)
-
-```python
-gen = pony_flash.video.generate(
-    model="veo-3.1",
-    prompt="A drone shot flying over a misty mountain forest at sunrise",
-    size="1920x1080",
-    duration=8,
-)
-print(gen.url)
-```
-
-## Example: image-to-video
+## Examples
 
 ```python
+# Text-to-video with audio
 gen = pony_flash.video.generate(
     model="veo-3.1",
-    first_frame="https://example.com/landscape.jpg",
-    prompt="Camera slowly pans right revealing a waterfall",
-    size="1920x1080",
-    duration=8,
-)
-```
-
-## Example: with reference images
-
-```python
-from pathlib import Path
-
-gen = pony_flash.video.generate(
-    model="veo-3.1",
-    prompt="A person walking through a garden",
-    reference_images=[Path("style_ref.jpg")],
-    size="1280x720",
+    prompt="A woman sings in a recording studio, warm lighting, close-up shot",
     duration=6,
+    resolution="1080p",
+    aspect_ratio="16:9",
+)
+
+# Image-to-video without audio
+gen = pony_flash.video.generate(
+    model="veo-3.1",
+    prompt="Camera slowly zooms into the scene",
+    first_frame=open("photo.jpg", "rb"),
+    duration=4,
+    generate_audio=False,
+)
+
+# Frame-to-frame transition
+gen = pony_flash.video.generate(
+    model="veo-3.1",
+    prompt="Smooth transition from day to night",
+    first_frame=open("day.jpg", "rb"),
+    last_frame=open("night.jpg", "rb"),
+    duration=8,
 )
 ```
 
-## Notes
+## Related
 
-- Prompt language: English only.
-- Duration 8s is the only option when using reference-image-to-video.
-- 1080p output produces higher quality but takes longer to generate.
+`veo-3.1-fast` — faster, cheaper. Same parameters. See [veo-3.1-fast.md](veo-3.1-fast.md).
