@@ -153,7 +153,7 @@ clip = Clip(asset=VideoAsset("slow.mp4"), duration=10.0, speed=0.5)  # slow moti
 | `Fit.COVER` | Fill canvas, crop overflow | `scale + crop` |
 | `Fit.CONTAIN` | Fit within canvas, show background | `scale + pad` |
 | `Fit.FILL` | Stretch to fill (may distort) | `scale` |
-| `Fit.NONE` | Original size, centered | `overlay` centered |
+| `Fit.NONE` | 保留原始像素尺寸，超出画布时裁切并居中 | `crop + pad` |
 
 ## CropGravity
 
@@ -198,12 +198,20 @@ The engine **automatically infers** each track's role from its clip types:
 | All `TextAsset` | Text | `drawtext` filter |
 | All `AudioAsset` | Audio | `adelay` + `amix` |
 
+主视频轨时间线规则：
+
+- `start` 是绝对时间线位置，不是“相对上一个 clip 的偏移”。
+- 没有转场时允许 gap，渲染时会保留黑帧/静音。
+- 没有转场时，主轨 clip 不能彼此重叠。
+- 有转场时，后一个 clip 必须从前一个 clip 结束前 `transition_duration` 秒开始。
+- 非法重叠会抛 `ClipOverlapError` 或 `ValidationError`。
+
 ```python
 # Main video track with transitions
 main = Track()
 main.add_clip(0, clip1)
-main.add_clip(5, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
-main.add_clip(9, clip3, transition=Transition.WIPELEFT, transition_duration=0.5)
+main.add_clip(4, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
+main.add_clip(8.5, clip3, transition=Transition.WIPELEFT, transition_duration=0.5)
 
 # Overlay track (picture-in-picture)
 pip = Track()
@@ -252,7 +260,7 @@ timeline.render(
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `output` | `str` | required | Output file path |
-| `resolution` | `str` | `"1080p"` | Preset or `"WxH"` |
+| `resolution` | `str` | `"1080p"` | Preset or `"WxH"`（显式 `"WxH"` 需要偶数宽高） |
 | `format` | `str \| None` | `None` | Output format (auto-detected from extension) |
 | `fps` | `int` | `30` | Output frame rate |
 | `quality` | `str` | `"medium"` | Quality preset |
@@ -302,7 +310,7 @@ clip = Clip(asset=video, duration=10,
 ### Track-level (xfade between clips)
 
 ```python
-track.add_clip(5, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
+track.add_clip(4, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
 ```
 
 ### All 58 xfade transition names

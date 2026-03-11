@@ -11,7 +11,7 @@ description: >-
 license: MIT
 metadata:
   author: ponyflash
-  version: "2.0"
+  version: "0.2.1"
 ---
 
 # PonyFlash SDK
@@ -27,7 +27,7 @@ metadata:
 To use PonyFlash, you need an API key. Please complete these steps:
 
 1. **Register / log in** at **https://www.ponyflash.com**
-2. **Get your API key** at **https://www.ponyflash.com/api-key** (the key starts with `pf_`)
+2. **Get your API key** at **https://www.ponyflash.com/api-key** (the key starts with `rk_`)
 3. **Check your credits** at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
 4. **Paste your API key back here** so I can configure it
 
@@ -36,7 +36,7 @@ To use PonyFlash, you need an API key. Please complete these steps:
 **Do NOT proceed until the user provides the key.** Once received, set it up:
 
 ```bash
-export PONYFLASH_API_KEY="pf_xxx"
+export PONYFLASH_API_KEY="rk_xxx"
 ```
 
 Then install the SDK:
@@ -79,7 +79,7 @@ If verification fails:
 ```python
 from ponyflash import PonyFlash
 
-pony_flash = PonyFlash(api_key="pf_xxx")
+pony_flash = PonyFlash(api_key="rk_xxx")
 ```
 
 Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted. 
@@ -98,6 +98,8 @@ All file parameters accept any of these types:
 | `(filename, bytes)` tuple | `("photo.jpg", data)` | Auto-uploaded with filename |
 
 Temp uploads are cleaned up automatically after `generate()` completes.
+
+普通本地字符串路径（例如 `"./photo.jpg"`）不支持；本地文件请始终使用 `Path(...)` 或 `open(..., "rb")`。
 
 ### Generation result
 
@@ -195,6 +197,12 @@ The editor follows a 4-layer model (same as VideoDB):
 | **Track** | `Track` | When clips play on the timeline (`add_clip(start, clip)`) |
 | **Timeline** | `Timeline` | Final canvas (aspect ratio, background, render output) |
 
+主视频轨使用绝对时间线语义：
+
+- `start` 是片段在最终时间线中的绝对起点。
+- 没有转场时允许 gap，渲染时会保留黑帧/静音。
+- 有转场时必须使用合法重叠窗口。例如前一个片段 5 秒、转场 1 秒，则后一个片段应从 `4.0` 秒开始，而不是 `5.0` 秒。
+
 ### Complete example
 
 ```python
@@ -221,8 +229,8 @@ clip3 = Clip(asset=photo, duration=3.0, fit=Fit.CONTAIN)
 # Track — sequencing with transitions
 video_track = Track()
 video_track.add_clip(0, clip1)
-video_track.add_clip(5, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
-video_track.add_clip(9, clip3, transition=Transition.WIPELEFT, transition_duration=0.5)
+video_track.add_clip(4, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
+video_track.add_clip(8.5, clip3, transition=Transition.WIPELEFT, transition_duration=0.5)
 
 text_track = Track()
 text_track.add_clip(0.5, Clip(asset=title, duration=3.0, position=Position.CENTER))
@@ -252,7 +260,7 @@ speech = client.speech.generate(model="speech-2.8-hd", input="Welcome to our sho
 
 track = Track()
 track.add_clip(0, Clip(asset=VideoAsset(v1.url), duration=5.0))
-track.add_clip(5, Clip(asset=VideoAsset(v2.url), duration=5.0),
+track.add_clip(4, Clip(asset=VideoAsset(v2.url), duration=5.0),
                transition=Transition.DISSOLVE, transition_duration=1.0)
 
 audio_track = Track()
@@ -266,7 +274,7 @@ tl.render("final.mp4", resolution="1080p")
 
 ### Quick reference
 
-**Fit modes:** `Fit.COVER` (fill + crop), `Fit.CONTAIN` (fit + letterbox), `Fit.FILL` (stretch), `Fit.NONE` (original size)
+**Fit modes:** `Fit.COVER` (fill + crop), `Fit.CONTAIN` (fit + letterbox), `Fit.FILL` (stretch), `Fit.NONE` (保留原始像素尺寸，超出画布时裁切后居中)
 
 **Positions (9-zone):** `TOP_LEFT`, `TOP`, `TOP_RIGHT`, `CENTER_LEFT`, `CENTER`, `CENTER_RIGHT`, `BOTTOM_LEFT`, `BOTTOM`, `BOTTOM_RIGHT`
 
@@ -274,7 +282,7 @@ tl.render("final.mp4", resolution="1080p")
 
 **Output formats:** MP4 (H.264), MP4 (H.265), WebM (VP9), MOV (ProRes), GIF
 
-**Resolution presets:** `"360p"`, `"480p"`, `"720p"`, `"1080p"`, `"2k"`, `"4k"`, or explicit `"1920x1080"`
+**Resolution presets:** `"360p"`, `"480p"`, `"720p"`, `"1080p"`, `"2k"`, `"4k"`, or explicit `"1920x1080"`。显式 `"WxH"` 需要使用偶数宽高。
 
 For complete API signatures, all 58 transition names, and detailed parameter docs:
 See [reference/editor.md](reference/editor.md)

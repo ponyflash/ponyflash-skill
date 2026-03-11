@@ -60,12 +60,19 @@ Once installed, your AI agent can use the PonyFlash SDK to:
 | Model listing | List available models, get model details and supported modes |
 | File management | Upload, list, get, delete files |
 | Account | Check credit balance, get recharge link |
+| Local video editing | Use `ponyflash.editor` to compose timelines locally with FFmpeg |
 
 ## Prerequisites
 
 ```bash
 pip install ponyflash
-export PONYFLASH_API_KEY="pf_xxx"
+export PONYFLASH_API_KEY="rk_xxx"
+```
+
+如果需要本地时间线编辑：
+
+```bash
+pip install ponyflash[editor]
 ```
 
 ## Quick Example
@@ -85,6 +92,8 @@ print(gen.url)
 ```
 
 See [SKILL.md](SKILL.md) for full usage instructions, or browse the [reference/](reference/) directory for detailed API docs.
+
+`ponyflash.editor` 已作为正式能力提供，详细语义与示例见 [reference/editor.md](reference/editor.md)。
 
 ## Directory Structure
 
