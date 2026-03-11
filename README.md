@@ -74,7 +74,6 @@ export PONYFLASH_API_KEY="rk_xxx"
 ```bash
 pip install ponyflash[editor]
 ```
-
 ## Quick Example
 
 ```python
@@ -94,7 +93,6 @@ print(gen.url)
 See [SKILL.md](SKILL.md) for full usage instructions, or browse the [reference/](reference/) directory for detailed API docs.
 
 `ponyflash.editor` 已作为正式能力提供，详细语义与示例见 [reference/editor.md](reference/editor.md)。
-
 ## Directory Structure
 
 ```

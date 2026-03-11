@@ -100,7 +100,6 @@ All file parameters accept any of these types:
 Temp uploads are cleaned up automatically after `generate()` completes.
 
 普通本地字符串路径（例如 `"./photo.jpg"`）不支持；本地文件请始终使用 `Path(...)` 或 `open(..., "rb")`。
-
 ### Generation result
 
 `Generation` object fields: `request_id`, `status`, `outputs`, `usage`, `error`.
@@ -202,7 +201,6 @@ The editor follows a 4-layer model (same as VideoDB):
 - `start` 是片段在最终时间线中的绝对起点。
 - 没有转场时允许 gap，渲染时会保留黑帧/静音。
 - 有转场时必须使用合法重叠窗口。例如前一个片段 5 秒、转场 1 秒，则后一个片段应从 `4.0` 秒开始，而不是 `5.0` 秒。
-
 ### Complete example
 
 ```python
