@@ -26,9 +26,9 @@ metadata:
 
 To use PonyFlash, you need an API key. Please complete these steps:
 
-1. **Register / log in** at **https://test.ponyflash.com**
-2. **Get your API key** at **https://test.ponyflash.com/api-key** (the key starts with `pf_`)
-3. **Check your credits** at **https://test.ponyflash.com/usage** (new accounts include free trial credits)
+1. **Register / log in** at **https://www.ponyflash.com**
+2. **Get your API key** at **https://www.ponyflash.com/api-key** (the key starts with `pf_`)
+3. **Check your credits** at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
 4. **Paste your API key back here** so I can configure it
 
 ---
@@ -56,8 +56,8 @@ print(f"Balance: {balance.balance} {balance.currency}")
 ```
 
 If verification fails:
-- **Key invalid or missing** → direct user to https://test.ponyflash.com/api-key
-- **Balance is zero** → direct user to https://test.ponyflash.com/usage to top up credits
+- **Key invalid or missing** → direct user to https://api.ponyflash.com/api-key
+- **Balance is zero** → direct user to https://api.ponyflash.com/usage to top up credits
 
 ## What this SDK can do
 
@@ -297,11 +297,11 @@ try:
 except AuthenticationError:
     # API key is missing or invalid — guide user to get one
     print("Invalid or missing API key.")
-    print("Get your API key at: https://test.ponyflash.com/api-key")
+    print("Get your API key at: https://api.ponyflash.com/api-key")
 except InsufficientCreditsError as e:
     # Out of credits — guide user to top up
     print(f"Not enough credits. Balance: {e.balance}, required: {e.required}")
-    print("Top up credits at: https://test.ponyflash.com/usage")
+    print("Top up credits at: https://api.ponyflash.com/usage")
 except RateLimitError:
     print("Rate limited — wait and retry")
 except GenerationFailedError as e:
