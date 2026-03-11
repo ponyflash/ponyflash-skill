@@ -153,7 +153,6 @@ clip = Clip(asset=VideoAsset("slow.mp4"), duration=10.0, speed=0.5)  # slow moti
 | `Fit.COVER` | Fill canvas, crop overflow | `scale + crop` |
 | `Fit.CONTAIN` | Fit within canvas, show background | `scale + pad` |
 | `Fit.FILL` | Stretch to fill (may distort) | `scale` |
-<<<<<<< HEAD
 | `Fit.NONE` | 保留原始像素尺寸，超出画布时裁切并居中 | `crop + pad` |
 
 ## CropGravity
