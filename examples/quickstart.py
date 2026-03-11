@@ -2,7 +2,7 @@
 
 Run:
     pip install ponyflash
-    export PONYFLASH_API_KEY="pf_xxx"
+    export PONYFLASH_API_KEY="rk_xxx"
     python quickstart.py
 """
 

@@ -27,7 +27,7 @@ metadata:
 To use PonyFlash, you need an API key. Please complete these steps:
 
 1. **Register / log in** at **https://www.ponyflash.com**
-2. **Get your API key** at **https://www.ponyflash.com/api-key** (the key starts with `pf_`)
+2. **Get your API key** at **https://www.ponyflash.com/api-key** (the key starts with `rk_`)
 3. **Check your credits** at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
 4. **Paste your API key back here** so I can configure it
 
@@ -36,7 +36,7 @@ To use PonyFlash, you need an API key. Please complete these steps:
 **Do NOT proceed until the user provides the key.** Once received, set it up:
 
 ```bash
-export PONYFLASH_API_KEY="pf_xxx"
+export PONYFLASH_API_KEY="rk_xxx"
 ```
 
 Then install the SDK:
@@ -79,7 +79,7 @@ If verification fails:
 ```python
 from ponyflash import PonyFlash
 
-pony_flash = PonyFlash(api_key="pf_xxx")
+pony_flash = PonyFlash(api_key="rk_xxx")
 ```
 
 Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted. 

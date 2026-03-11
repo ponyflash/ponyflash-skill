@@ -65,7 +65,7 @@ Once installed, your AI agent can use the PonyFlash SDK to:
 
 ```bash
 pip install ponyflash
-export PONYFLASH_API_KEY="pf_xxx"
+export PONYFLASH_API_KEY="rk_xxx"
 ```
 
 ## Quick Example
