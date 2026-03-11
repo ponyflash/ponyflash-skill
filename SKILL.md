@@ -2,13 +2,16 @@
 name: ponyflash
 description: >-
   Generate images, videos, speech audio, and music using the PonyFlash Python SDK.
-  Use when the user asks to create, generate, or produce images, videos, speech,
-  audio, music, or any AI-generated media content. Also use when checking PonyFlash
-  account balance, listing models, or managing generated files.
+  Compose and render multi-clip video timelines locally with transitions, text overlays,
+  and audio mixing using ponyflash.editor (powered by FFmpeg).
+  Use when the user asks to create, generate, produce, compose, merge, concatenate,
+  edit, combine, stitch, or render images, videos, speech, audio, music, timelines,
+  or any AI-generated media content. Also use when checking PonyFlash account balance,
+  listing models, or managing generated files.
 license: MIT
 metadata:
   author: ponyflash
-  version: "1.0"
+  version: "2.0"
 ---
 
 # PonyFlash SDK
@@ -67,6 +70,7 @@ If verification fails:
 | Model listing | `pony_flash.models` | List available models, get model details and supported modes |
 | File management | `pony_flash.files` | Upload, list, get, delete files |
 | Account | `pony_flash.account` | Check credit balance, get recharge link |
+| Video composition | `ponyflash.editor` | Compose multi-clip timelines locally with 58 xfade transitions, text overlays, audio mixing, multiple output formats (MP4/WebM/GIF/MOV). Powered by FFmpeg |
 
 ## Core concepts
 
@@ -169,6 +173,112 @@ balance = pony_flash.account.credits()
 print(f"Balance: {balance.balance} {balance.currency}")
 ```
 
+## Video composition (local rendering)
+
+> **No API key needed** for video composition. This module runs entirely on the local machine using FFmpeg.
+
+### Install
+
+```bash
+pip install ponyflash[editor]   # includes static-ffmpeg auto-download
+# OR: ensure ffmpeg is on your system PATH
+```
+
+### Architecture: Asset → Clip → Track → Timeline
+
+The editor follows a 4-layer model (same as VideoDB):
+
+| Layer | Class | Responsibility |
+|---|---|---|
+| **Asset** | `VideoAsset`, `AudioAsset`, `ImageAsset`, `TextAsset` | Raw content reference (file path or URL) |
+| **Clip** | `Clip` | How to present the asset (duration, fit, scale, position, opacity, volume, speed) |
+| **Track** | `Track` | When clips play on the timeline (`add_clip(start, clip)`) |
+| **Timeline** | `Timeline` | Final canvas (aspect ratio, background, render output) |
+
+### Complete example
+
+```python
+from ponyflash.editor import (
+    Timeline, Track, Clip,
+    VideoAsset, AudioAsset, ImageAsset, TextAsset,
+    Fit, Position, Transition,
+)
+
+# Assets — local files or URLs
+scene1 = VideoAsset("scene1.mp4")
+scene2 = VideoAsset("scene2.mp4")
+photo  = ImageAsset("cover.jpg")
+bgm    = AudioAsset("bgm.mp3")
+title  = TextAsset("My Video", font_size=60, color="white",
+                    box=True, box_color="black@0.5",
+                    fade_in=0.5, fade_out=0.5)
+
+# Clips — presentation layer
+clip1 = Clip(asset=scene1, duration=5.0, fit=Fit.COVER)
+clip2 = Clip(asset=scene2, duration=5.0, fit=Fit.COVER)
+clip3 = Clip(asset=photo, duration=3.0, fit=Fit.CONTAIN)
+
+# Track — sequencing with transitions
+video_track = Track()
+video_track.add_clip(0, clip1)
+video_track.add_clip(5, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
+video_track.add_clip(9, clip3, transition=Transition.WIPELEFT, transition_duration=0.5)
+
+text_track = Track()
+text_track.add_clip(0.5, Clip(asset=title, duration=3.0, position=Position.CENTER))
+
+audio_track = Track()
+audio_track.add_clip(0, Clip(asset=bgm, volume=0.3))
+
+# Timeline — compose and render
+timeline = Timeline(aspect_ratio="16:9")
+timeline.background = "#000000"
+timeline.add_track(video_track)
+timeline.add_track(text_track)
+timeline.add_track(audio_track)
+timeline.render("output.mp4", resolution="1080p")
+```
+
+### Combine with PonyFlash generation
+
+```python
+from ponyflash import PonyFlash
+from ponyflash.editor import Timeline, Track, Clip, VideoAsset, AudioAsset, Transition
+
+client = PonyFlash()
+v1 = client.video.generate(model="veo-3.1-fast", prompt="Sunrise timelapse")
+v2 = client.video.generate(model="veo-3.1-fast", prompt="City night aerial")
+speech = client.speech.generate(model="speech-2.8-hd", input="Welcome to our show")
+
+track = Track()
+track.add_clip(0, Clip(asset=VideoAsset(v1.url), duration=5.0))
+track.add_clip(5, Clip(asset=VideoAsset(v2.url), duration=5.0),
+               transition=Transition.DISSOLVE, transition_duration=1.0)
+
+audio_track = Track()
+audio_track.add_clip(0, Clip(asset=AudioAsset(speech.url)))
+
+tl = Timeline(aspect_ratio="16:9")
+tl.add_track(track)
+tl.add_track(audio_track)
+tl.render("final.mp4", resolution="1080p")
+```
+
+### Quick reference
+
+**Fit modes:** `Fit.COVER` (fill + crop), `Fit.CONTAIN` (fit + letterbox), `Fit.FILL` (stretch), `Fit.NONE` (original size)
+
+**Positions (9-zone):** `TOP_LEFT`, `TOP`, `TOP_RIGHT`, `CENTER_LEFT`, `CENTER`, `CENTER_RIGHT`, `BOTTOM_LEFT`, `BOTTOM`, `BOTTOM_RIGHT`
+
+**Popular transitions:** `FADE`, `FADEBLACK`, `FADEWHITE`, `DISSOLVE`, `WIPELEFT`, `WIPERIGHT`, `SLIDEUP`, `SLIDEDOWN`, `CIRCLEOPEN`, `RADIAL`, `PIXELIZE` (58 total)
+
+**Output formats:** MP4 (H.264), MP4 (H.265), WebM (VP9), MOV (ProRes), GIF
+
+**Resolution presets:** `"360p"`, `"480p"`, `"720p"`, `"1080p"`, `"2k"`, `"4k"`, or explicit `"1920x1080"`
+
+For complete API signatures, all 58 transition names, and detailed parameter docs:
+See [reference/editor.md](reference/editor.md)
+
 ## Error handling
 
 ```python
@@ -214,6 +324,7 @@ For complete method signatures, parameter types, and return type fields:
 - **Model listing**: [reference/models.md](reference/models.md)
 - **File management**: [reference/files.md](reference/files.md)
 - **Account / credits**: [reference/account.md](reference/account.md)
+- **Video composition (editor)**: [reference/editor.md](reference/editor.md)
 
 ## Model catalog
 
