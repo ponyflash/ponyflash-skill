@@ -414,10 +414,46 @@ For `.srt` / `.ass` burn-in:
 bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
 ```
 
-If the task needs adaptive line wrapping or controlled subtitle layout:
+If subtitle style is unspecified, the agent should use the default subtitle workflow and bundled font assets.
+
+Preferred stable entrypoint:
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+```
+
+If the task needs adaptive line wrapping or controlled subtitle layout, or if you need to understand the underlying steps:
 
 ```bash
 python3 "{baseDir}/scripts/build_ass_subtitles.py" --help
+```
+
+Default burn pattern:
+
+1. Probe width and height:
+
+```bash
+ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "input.mp4"
+```
+
+2. Build a default ASS subtitle file:
+
+```bash
+python3 "{baseDir}/scripts/build_ass_subtitles.py" \
+  --subtitle-file "subtitles.srt" \
+  --output-ass "subtitles.ass" \
+  --video-width 1920 \
+  --video-height 1080 \
+  --latin-font-file "{baseDir}/assets/fonts/Adamina-Regular.ttf" \
+  --cjk-font-file "{baseDir}/assets/fonts/NotoSansSC-Regular.ttf"
+```
+
+3. Burn subtitles with bundled fonts:
+
+```bash
+ffmpeg -i "input.mp4" \
+  -vf "subtitles=subtitles.ass:fontsdir={baseDir}/assets/fonts" \
+  -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "output.mp4"
 ```
 
 Default subtitle references:
@@ -433,6 +469,7 @@ Default subtitle references:
 - Concat tasks: default to `copy`; fallback to `reencode` if source parameters differ.
 - Audio extraction: default to AAC in `.m4a`.
 - Transcode: default to `mp4 + libx264 + aac`.
+- Subtitle tasks: if subtitle style is unspecified, use the default subtitle workflow, bundled fonts, and default subtitle styling rules.
 - Subtitle tasks: prefer `subtitles`; use `drawtext` only as a plain text fallback.
 - Do not overwrite outputs unless the user explicitly allows it.
 

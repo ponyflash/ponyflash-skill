@@ -194,7 +194,15 @@ bash scripts/media_ops.sh frame --input "input.mp4" --output "cover.jpg" --time 
 
 ### Default strategy
 
-Subtitle tasks do not use a stable `media_ops.sh` subcommand. Check whether the current FFmpeg build supports the required filters first.
+Check whether the current FFmpeg build supports the required filters first.
+
+If subtitle style is unspecified, use the default subtitle workflow and bundled font assets.
+
+Preferred stable entrypoint:
+
+```bash
+bash scripts/media_ops.sh subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+```
 
 If the task has explicit requirements for long-line wrapping, portrait / landscape adaptation, or subtitle safe margins, generate `.ass` first and then burn it in with `ffmpeg subtitles`.
 
@@ -203,6 +211,12 @@ Recommended entry point:
 ```bash
 python3 scripts/build_ass_subtitles.py --help
 ```
+
+Default burn pattern:
+
+1. Probe output dimensions with `ffprobe`
+2. Build `.ass` with `scripts/build_ass_subtitles.py`
+3. Burn it in with `ffmpeg subtitles=...:fontsdir=...`
 
 The default subtitle style should use `1920x1080` as the reference baseline, but scale dynamically at runtime:
 
@@ -255,6 +269,5 @@ The current stable script interface is not a good fit for:
 - picture-in-picture
 - multi-track audio/video rearrangement
 
-Subtitle burn-in is a supported capability, but it is still outside the stable `media_ops.sh` command surface.
-
-For these tasks, it is acceptable to fall back to raw `ffmpeg` commands after clearly explaining that they are outside the stable skill interface.
+Subtitle burn-in now has a stable default entrypoint through `media_ops.sh subtitle-burn`.
+For more complex subtitle tasks beyond the default workflow, it is acceptable to fall back to raw `ffmpeg` commands after clearly explaining that they are outside the stable skill interface.

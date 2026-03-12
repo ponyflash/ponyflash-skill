@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Build ASS subtitles with adaptive sizing and pre-wrapping.
 
-This script turns a JSON subtitle event list into an ASS subtitle file.
-It applies the default Ponyflash subtitle style, scales values to the
+This script turns a subtitle source into an ASS subtitle file.
+Supported source formats:
+- JSON subtitle event list
+- SRT subtitle file
+
+It applies the default PonyFlash subtitle style, scales values to the
 target output size, and pre-wraps text before ffmpeg/libass renders it.
 """
 
@@ -10,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -237,7 +242,19 @@ def build_style(args: argparse.Namespace) -> dict[str, int]:
     }
 
 
-def read_events(events_json: Path) -> list[dict[str, Any]]:
+def parse_srt_timestamp(timestamp: str) -> str:
+    match = re.match(r"^(\d{2}):(\d{2}):(\d{2})[,.](\d{1,3})$", timestamp.strip())
+    if not match:
+        raise SystemExit(f"Invalid SRT timestamp: {timestamp}")
+
+    hours, minutes, seconds, millis = match.groups()
+    centiseconds = round(int(millis.ljust(3, "0")[:3]) / 10)
+    if centiseconds == 100:
+        centiseconds = 99
+    return f"{int(hours)}:{minutes}:{seconds}.{centiseconds:02d}"
+
+
+def read_events_from_json(events_json: Path) -> list[dict[str, Any]]:
     try:
         data = json.loads(events_json.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -256,9 +273,54 @@ def read_events(events_json: Path) -> list[dict[str, Any]]:
     return normalized
 
 
+def read_events_from_srt(subtitle_file: Path) -> list[dict[str, Any]]:
+    content = subtitle_file.read_text(encoding="utf-8-sig").replace("\r\n", "\n").strip()
+    if not content:
+        return []
+
+    events: list[dict[str, Any]] = []
+    blocks = re.split(r"\n\s*\n", content)
+    for index, block in enumerate(blocks, start=1):
+        lines = [line.rstrip() for line in block.split("\n") if line.strip() != ""]
+        if not lines:
+            continue
+
+        if re.fullmatch(r"\d+", lines[0]):
+            lines = lines[1:]
+
+        if not lines or "-->" not in lines[0]:
+            raise SystemExit(f"Invalid SRT block #{index}: missing timestamp line.")
+
+        timestamp_line = lines[0]
+        text_lines = lines[1:]
+        if not text_lines:
+            raise SystemExit(f"Invalid SRT block #{index}: missing subtitle text.")
+
+        start_raw, end_raw = [part.strip() for part in timestamp_line.split("-->", 1)]
+        events.append(
+            {
+                "start": parse_srt_timestamp(start_raw),
+                "end": parse_srt_timestamp(end_raw),
+                "text": "\n".join(text_lines),
+            }
+        )
+
+    return events
+
+
+def read_events(source_path: Path) -> list[dict[str, Any]]:
+    suffix = source_path.suffix.lower()
+    if suffix == ".json":
+        return read_events_from_json(source_path)
+    if suffix == ".srt":
+        return read_events_from_srt(source_path)
+    raise SystemExit(f"Unsupported subtitle source format: {source_path.suffix}")
+
+
 def build_ass(args: argparse.Namespace) -> str:
     style = build_style(args)
-    events = read_events(Path(args.events_json))
+    source_path = Path(args.subtitle_file or args.events_json)
+    events = read_events(source_path)
 
     max_width_ratio = args.wrap_width_ratio or ratio_or_default(args.video_width, args.video_height)
     max_text_width = args.video_width * max_width_ratio
@@ -324,7 +386,9 @@ def build_ass(args: argparse.Namespace) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build ASS subtitles with adaptive wrapping.")
-    parser.add_argument("--events-json", required=True, help="JSON array of subtitle events.")
+    source_group = parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument("--subtitle-file", help="Subtitle source file (.srt or .json).")
+    source_group.add_argument("--events-json", help="Deprecated alias for JSON subtitle events.")
     parser.add_argument("--output-ass", required=True, help="Output ASS file path.")
     parser.add_argument("--video-width", type=int, required=True, help="Target output video width.")
     parser.add_argument("--video-height", type=int, required=True, help="Target output video height.")

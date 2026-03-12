@@ -252,3 +252,50 @@ Notes:
 - the script uses a `90%` safe-width rule by default
 - it pre-wraps text based on measured font width before generating `.ass`
 - after generating `.ass`, burn it in with `ffmpeg -vf subtitles=...`
+
+## Example 17: Burn subtitles with the default workflow
+
+User intent:
+
+> Add subtitles to this video. Use the default style.
+
+Recommended command:
+
+```bash
+bash scripts/media_ops.sh subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+```
+
+What it does by default:
+
+- probes the input video width and height with `ffprobe`
+- builds an adaptive `.ass` file with `scripts/build_ass_subtitles.py`
+- uses bundled fonts from `assets/fonts/`
+- burns subtitles with `ffmpeg subtitles=...:fontsdir=...`
+
+## Example 18: Expanded default subtitle burn pattern
+
+User intent:
+
+> Show me the full default subtitle burn flow
+
+Recommended workflow:
+
+```bash
+ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "input.mp4"
+```
+
+```bash
+python3 scripts/build_ass_subtitles.py \
+  --subtitle-file "subtitles.srt" \
+  --output-ass "subtitles.ass" \
+  --video-width 1920 \
+  --video-height 1080 \
+  --latin-font-file "assets/fonts/Adamina-Regular.ttf" \
+  --cjk-font-file "assets/fonts/NotoSansSC-Regular.ttf"
+```
+
+```bash
+ffmpeg -i "input.mp4" \
+  -vf "subtitles=subtitles.ass:fontsdir=assets/fonts" \
+  -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "output.mp4"
+```

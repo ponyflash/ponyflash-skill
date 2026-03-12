@@ -62,6 +62,7 @@ This skill now combines **PonyFlash cloud generation** and **local FFmpeg media 
 | Account | Check credit balance, get recharge link |
 | Local media editing | Clip, concat, transcode, extract audio, and frame capture through `scripts/media_ops.sh` |
 | FFmpeg capability checks | Detect `ffmpeg` / `ffprobe`, subtitle filters, and editing profile support |
+| Subtitle burn-in | Burn subtitles with `scripts/media_ops.sh subtitle-burn` using the default workflow and bundled fonts |
 | Subtitle prep | Build adaptive ASS subtitles with `scripts/build_ass_subtitles.py` |
 
 ## Prerequisites
@@ -110,6 +111,12 @@ print(gen.url)
 
 ```bash
 bash scripts/media_ops.sh clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+```
+
+### Default subtitle burn-in
+
+```bash
+bash scripts/media_ops.sh subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
 ```
 
 See [SKILL.md](SKILL.md) for full usage instructions.
