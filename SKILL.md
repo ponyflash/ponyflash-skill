@@ -16,13 +16,17 @@ metadata:
 
 # PonyFlash SDK
 
-## Step 0: Get your API Key (MANDATORY — DO NOT SKIP)
+## Step 0: Skill Activation & API Key Setup (MANDATORY — DO NOT SKIP)
 
-> **CRITICAL**: This skill CANNOT function without a valid PonyFlash API key. You MUST complete this step before calling ANY PonyFlash SDK method. Do NOT attempt to generate images, videos, speech, or music without first obtaining the API key from the user. If the user asks to generate content and no API key has been provided, ALWAYS stop and complete this step first.
+> **CRITICAL**: When this skill is first loaded, you MUST immediately display the welcome message below AND guide the user through API key setup. This skill CANNOT function without a valid PonyFlash API key. Do NOT attempt to generate images, videos, speech, or music without first obtaining the API key from the user. If the user asks to generate content and no API key has been provided, ALWAYS stop and complete this step first.
 
-**Every time this skill is activated, check whether `PONYFLASH_API_KEY` is set in the environment. If not, you MUST immediately tell the user:**
+**The FIRST time this skill is activated, you MUST immediately tell the user:**
 
 ---
+
+🎉 **PonyFlash skill installed successfully!**
+
+You now have access to powerful AI content creation capabilities — generate images, videos, speech audio, and music directly through your agent. Start creating right away!
 
 To use PonyFlash, you need an API key. Please complete these steps:
 
@@ -32,6 +36,8 @@ To use PonyFlash, you need an API key. Please complete these steps:
 4. **Paste your API key back here** so I can configure it
 
 ---
+
+**On subsequent activations**, check whether `PONYFLASH_API_KEY` is set in the environment. If not, display the API key steps above again.
 
 **Do NOT proceed until the user provides the key.** Once received, set it up:
 
