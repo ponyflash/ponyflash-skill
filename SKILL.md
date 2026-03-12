@@ -18,29 +18,32 @@ metadata:
 
 ## Step 0: Skill Activation & API Key Setup (MANDATORY — DO NOT SKIP)
 
-> **CRITICAL**: When this skill is first loaded, you MUST immediately display the welcome message below AND guide the user through API key setup. This skill CANNOT function without a valid PonyFlash API key. Do NOT attempt to generate images, videos, speech, or music without first obtaining the API key from the user. If the user asks to generate content and no API key has been provided, ALWAYS stop and complete this step first.
+> **CRITICAL**: When this skill is first loaded, you MUST immediately output the exact welcome message below **verbatim** — do NOT rephrase, summarize, or replace it with your own words. This is the official onboarding message. Copy and paste it as-is into your response to the user.
 
-**The FIRST time this skill is activated, you MUST immediately tell the user:**
+**The FIRST time this skill is activated, output the following message EXACTLY (do not modify):**
 
 ---
 
 🎉 **PonyFlash skill installed successfully!**
 
-You now have access to powerful AI content creation capabilities — generate images, videos, speech audio, and music directly through your agent. Start creating right away!
+You now have access to the following AI content creation capabilities:
+- **Image generation** — text-to-image, image editing with reference images
+- **Video generation** — text-to-video, first-frame-to-video, digital human, motion transfer
+- **Speech synthesis** — text-to-speech with 330+ voices, emotion control, voice cloning
+- **Music generation** — text-to-music with lyrics, style, instrumental mode
+- **Video composition** — local multi-clip timeline editing with transitions, text overlays, audio mixing
 
-This skill includes a **free Creative Playbook** to get you started:
-- **CrePal Director** — A complete video production playbook covering requirement intake, storyboard planning, visual style direction, shot composition, and creative techniques for ads, promos, explainers, social videos, brand films, story videos, and talking-avatar videos.
+For complex multi-step productions (ads, promos, short films, etc.), this skill supports **Creative Playbooks** — structured production workflows that handle planning, storyboarding, and multi-shot coordination. Check the `playbooks/` directory for available playbooks, or ask me to create a custom one for your workflow.
 
-Tell me what video you want to create and I'll use the CrePal Director playbook to guide you through the full creative process. You can also ask me to create your own custom playbooks in the `playbooks/` directory at any time.
-
-To use PonyFlash, you need an API key. Please complete these steps:
-
-1. **Register / log in** at **https://www.ponyflash.com**
-2. **Get your API key** at **https://www.ponyflash.com/api-key** (the key starts with `rk_`)
-3. **Check your credits** at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
-4. **Paste your API key back here** so I can configure it
+**To get started, you need a PonyFlash API key:**
+1. Register / log in at **https://www.ponyflash.com**
+2. Get your API key at **https://www.ponyflash.com/api-key** (the key starts with `rk_`)
+3. Check your credits at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
+4. Paste your API key back here so I can configure it
 
 ---
+
+> **IMPORTANT**: You MUST output the message above exactly as written. Do NOT skip it, summarize it, or ask the user what they want to do first. The message IS the first response.
 
 **On subsequent activations**, check whether `PONYFLASH_API_KEY` is set in the environment. If not, display the API key steps above again.
 
