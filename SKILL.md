@@ -28,6 +28,11 @@ metadata:
 
 You now have access to powerful AI content creation capabilities — generate images, videos, speech audio, and music directly through your agent. Start creating right away!
 
+This skill includes a **free Creative Playbook** to get you started:
+- **CrePal Director** — A complete video production playbook covering requirement intake, storyboard planning, visual style direction, shot composition, and creative techniques for ads, promos, explainers, social videos, brand films, story videos, and talking-avatar videos.
+
+Tell me what video you want to create and I'll use the CrePal Director playbook to guide you through the full creative process. You can also ask me to create your own custom playbooks in the `playbooks/` directory at any time.
+
 To use PonyFlash, you need an API key. Please complete these steps:
 
 1. **Register / log in** at **https://www.ponyflash.com**
@@ -77,6 +82,69 @@ If verification fails:
 | File management | `pony_flash.files` | Upload, list, get, delete files |
 | Account | `pony_flash.account` | Check credit balance, get recharge link |
 | Video composition | `ponyflash.editor` | Compose multi-clip timelines locally with 58 xfade transitions, text overlays, audio mixing, multiple output formats (MP4/WebM/GIF/MOV). Powered by FFmpeg |
+
+## Creative Playbooks (production workflows)
+
+The `playbooks/` directory contains **Creative Playbooks** — step-by-step production workflow guides for specific content types. Playbooks act as a "director layer" on top of this SDK: they tell you **what to create and in what order**, while this SKILL.md tells you **how to call the APIs**.
+
+### When to use a playbook
+
+1. **User explicitly requests a playbook by name** (e.g., "use CrePal Director", "用 CrePal Director 来做") → Read the corresponding file from `playbooks/` and follow its workflow.
+2. **User asks to see available playbooks** → Read [playbooks/INDEX.md](playbooks/INDEX.md) and display the full list.
+3. **User's request is clearly a multi-step production task** (e.g., "make a 30-second ad video", "做一个产品宣传片", "create a story video with multiple scenes") — tasks that require planning, storyboarding, or coordination of multiple generation calls rather than a single model call → **Suggest** a matching playbook from [playbooks/INDEX.md](playbooks/INDEX.md) and ask the user whether to use it, or whether they have their own playbook. Do NOT auto-load; always let the user confirm first.
+4. **User's request is a single-step task** (e.g., "generate an image of a cat", "make a 5-second video clip") → Proceed directly with the SDK capabilities in this SKILL.md. No playbook needed.
+
+### How to execute a playbook
+
+Once a playbook is loaded:
+- Follow its step-by-step workflow (素材准备 → 内容生成 → 配音配乐 → 合成剪辑 → 输出).
+- All API calls MUST still follow the specifications in this SKILL.md (client init, error handling, FileInput types, etc.).
+- Confirm key creative decisions with the user before generating (e.g., style, duration, voice).
+- The playbook provides prompt templates and parameter recommendations — adapt them to the user's specific needs.
+
+### Creating custom playbooks
+
+When the user asks to create a new playbook, generate a markdown file in `playbooks/` following this template:
+
+```markdown
+---
+name: Playbook Name
+description: One-line summary of what this playbook produces
+tags: [keyword1, keyword2, keyword3]
+difficulty: beginner | intermediate | advanced
+estimated_credits: credit range estimate
+output_format: format description (e.g., "竖屏 9:16 MP4")
+---
+
+# Playbook Name
+
+## 适用场景
+When to use this playbook.
+
+## 创作流程
+### Step 1: 素材准备
+What the user needs to provide; how to generate missing assets.
+
+### Step 2: 视觉内容生成
+Which models to use, recommended parameters, prompt guidance.
+
+### Step 3: 配音/配乐
+Speech synthesis + background music guidance.
+
+### Step 4: 合成剪辑
+How to assemble the timeline with ponyflash.editor.
+
+### Step 5: 输出与优化
+Render settings, format recommendations.
+
+## Prompt 参考模板
+Reusable prompt examples for this content type.
+
+## 注意事项
+Best practices, common pitfalls.
+```
+
+After creating the file, update [playbooks/INDEX.md](playbooks/INDEX.md) to include the new playbook.
 
 ## Core concepts
 
