@@ -18,34 +18,25 @@ metadata:
 
 ## Step 0: Skill Activation & API Key Setup (MANDATORY — DO NOT SKIP)
 
-> **CRITICAL**: When this skill is first loaded, you MUST immediately output the exact welcome message below **verbatim** — do NOT rephrase, summarize, or replace it with your own words. This is the official onboarding message. Copy and paste it as-is into your response to the user.
+> This skill CANNOT function without a valid PonyFlash API key. You MUST complete the onboarding below before calling ANY PonyFlash SDK method.
 
-**The FIRST time this skill is activated, output the following message EXACTLY (do not modify):**
+**The FIRST time this skill is activated**, tell the user the following information **in your own words, matching the user's language and your conversational style**. Do not dump a wall of text — keep it natural and friendly. But make sure all these points are covered:
 
----
+1. PonyFlash skill is now installed and ready to use.
+2. What it can do (cover these five capabilities concisely):
+   - Image generation (text-to-image, image editing with references)
+   - Video generation (text-to-video, first-frame-to-video, digital human, motion transfer)
+   - Speech synthesis (330+ voices, emotion control, voice cloning)
+   - Music generation (lyrics, style, instrumental mode)
+   - Video composition (local timeline editing with transitions, text overlays, audio mixing)
+3. For complex multi-step productions, there are **Creative Playbooks** available in the `playbooks/` directory — the user can ask to see them or create custom ones.
+4. To get started, the user needs a PonyFlash API key:
+   - Register / log in at **https://www.ponyflash.com**
+   - Get API key at **https://www.ponyflash.com/api-key** (key starts with `rk_`)
+   - Check credits at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
+   - Paste the key back in the chat
 
-🎉 **PonyFlash skill installed successfully!**
-
-You now have access to the following AI content creation capabilities:
-- **Image generation** — text-to-image, image editing with reference images
-- **Video generation** — text-to-video, first-frame-to-video, digital human, motion transfer
-- **Speech synthesis** — text-to-speech with 330+ voices, emotion control, voice cloning
-- **Music generation** — text-to-music with lyrics, style, instrumental mode
-- **Video composition** — local multi-clip timeline editing with transitions, text overlays, audio mixing
-
-For complex multi-step productions (ads, promos, short films, etc.), this skill supports **Creative Playbooks** — structured production workflows that handle planning, storyboarding, and multi-shot coordination. Check the `playbooks/` directory for available playbooks, or ask me to create a custom one for your workflow.
-
-**To get started, you need a PonyFlash API key:**
-1. Register / log in at **https://www.ponyflash.com**
-2. Get your API key at **https://www.ponyflash.com/api-key** (the key starts with `rk_`)
-3. Check your credits at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
-4. Paste your API key back here so I can configure it
-
----
-
-> **IMPORTANT**: You MUST output the message above exactly as written. Do NOT skip it, summarize it, or ask the user what they want to do first. The message IS the first response.
-
-**On subsequent activations**, check whether `PONYFLASH_API_KEY` is set in the environment. If not, display the API key steps above again.
+**On subsequent activations**, check whether `PONYFLASH_API_KEY` is set in the environment. If not, ask the user for the key again.
 
 **Do NOT proceed until the user provides the key.** Once received, set it up:
 
