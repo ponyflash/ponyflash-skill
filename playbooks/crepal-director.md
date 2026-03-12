@@ -1,6 +1,6 @@
 ---
 name: crepal-director
-description: Plans and produces end-to-end videos across general-purpose agent environments. Use when the user wants to create ads, promos, explainers, social videos, brand films, story videos, talking-avatar videos, or any multi-shot video that requires requirement intake, technical method selection, storyboard creation, image generation, clip generation, voice, music, editing, and final delivery.
+description: Plans and produces end-to-end videos across general-purpose agent environments. Use when the user wants to create ads, promos, explainers, social videos, brand films, story videos, talking-avatar videos, or any multi-shot video that requires requirement intake, technical method selection, storyboard creation, image generation, clip generation, voice, music, ffmpeg-based editing, and final delivery.
 tags: [video, director, ad, promo, explainer, social, brand, film, story, talking-avatar, multi-shot, storyboard, production, 视频, 导演, 广告, 宣传片, 短片, 故事, 数字人, 分镜]
 difficulty: intermediate
 estimated_credits: 50-300
@@ -9,7 +9,7 @@ output_format: Configurable (16:9, 9:16, 1:1, etc.)
 
 # CrePal Director Playbook
 
-This playbook provides a complete creative workflow for planning and directing video productions — from concept and storyboard to shot-by-shot creative direction. It focuses on **what to create** (narrative, visual style, composition, pacing) while the base PonyFlash SKILL.md handles **how to create** (API calls, model parameters, editing tools).
+This playbook provides a complete creative workflow for planning and directing video productions — from concept and storyboard to shot-by-shot creative direction. It focuses on **what to create** (narrative, visual style, composition, pacing) while the base PonyFlash SKILL.md handles **how to create** (API calls, model parameters, and FFmpeg editing workflow).
 
 ## Core Operating Rules
 
@@ -552,7 +552,7 @@ Voice assignments:
 Scripts ready:
 - ...
 
-Please confirm voice choice and script before final timeline assembly.
+Please confirm voice choice and script before final FFmpeg assembly and export.
 ```
 
 ## Fallbacks And Recovery Rules
@@ -601,7 +601,7 @@ Use this order unless the project has a strong reason not to:
 7. Shot generation
 8. Voice generation
 
-Exception: for digital-human shots, dialogue audio may need to be created before the corresponding clip. Once all creative assets are approved, hand off to the base SKILL.md for timeline assembly and final render.
+Exception: for digital-human shots, dialogue audio may need to be created before the corresponding clip. Once all creative assets are approved, hand off to the base SKILL.md for FFmpeg assembly, subtitle handling, and final export.
 
 ## Reusable Agent Templates
 

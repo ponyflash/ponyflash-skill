@@ -1,6 +1,6 @@
 # PonyFlash — Agent Skill
 
-Generate images, videos, speech audio, and music through AI agents using the [PonyFlash](https://ponyflash.com) Python SDK.
+Generate images, videos, speech audio, and music through the [PonyFlash](https://ponyflash.com) Python SDK, and handle local media editing with FFmpeg.
 
 Compatible with the [Agent Skills](https://agentskills.io/specification) open standard. Works with **Claude Code, OpenClaw, Cursor, Codex, Gemini CLI, Windsurf, Cline** and 40+ other AI agents.
 
@@ -12,7 +12,7 @@ Compatible with the [Agent Skills](https://agentskills.io/specification) open st
 git clone https://github.com/ponyflash/ponyflash-skill.git ponyflash
 ```
 
-Then move the `ponyflash` folder into your agent's skills directory (see table below).
+Then move the `ponyflash` folder into your agent's skills directory.
 
 ### OpenClaw
 
@@ -36,7 +36,7 @@ git clone https://github.com/ponyflash/ponyflash-skill.git .claude/skills/ponyfl
 git clone https://github.com/ponyflash/ponyflash-skill.git .cursor/skills/ponyflash
 ```
 
-### Skills directory by agent
+### Skills Directory by Agent
 
 | Agent | Project-level | Global |
 |-------|--------------|--------|
@@ -49,7 +49,7 @@ git clone https://github.com/ponyflash/ponyflash-skill.git .cursor/skills/ponyfl
 
 ## What This Skill Does
 
-Once installed, your AI agent can use the PonyFlash SDK to:
+This skill now combines **PonyFlash cloud generation** and **local FFmpeg media processing**.
 
 | Capability | Description |
 |---|---|
@@ -60,28 +60,44 @@ Once installed, your AI agent can use the PonyFlash SDK to:
 | Model listing | List available models, get model details and supported modes |
 | File management | Upload, list, get, delete files |
 | Account | Check credit balance, get recharge link |
-| Local video editing | Use `ponyflash.editor` to compose timelines locally with FFmpeg |
+| Local media editing | Clip, concat, transcode, extract audio, and frame capture through `scripts/media_ops.sh` |
+| FFmpeg capability checks | Detect `ffmpeg` / `ffprobe`, subtitle filters, and editing profile support |
+| Subtitle prep | Build adaptive ASS subtitles with `scripts/build_ass_subtitles.py` |
 
 ## Prerequisites
+
+### PonyFlash cloud generation
 
 ```bash
 pip install ponyflash
 export PONYFLASH_API_KEY="rk_xxx"
 ```
 
-如果需要本地时间线编辑：
+### Local FFmpeg editing
+
+Local editing does not require a PonyFlash API key, but it does require working `ffmpeg` / `ffprobe` binaries on the machine.
+
+Check with:
 
 ```bash
-pip install ponyflash[editor]
+bash scripts/check_ffmpeg.sh
 ```
-## Quick Example
+
+If you also need subtitle burn-in:
+
+```bash
+bash scripts/check_ffmpeg.sh --require-subtitles-filter
+```
+
+## Quick Examples
+
+### PonyFlash SDK
 
 ```python
 from ponyflash import PonyFlash
 
 pony_flash = PonyFlash()
 
-# Generate an image
 gen = pony_flash.images.generate(
     model="nano-banana-pro",
     prompt="A sunset over mountains",
@@ -90,31 +106,62 @@ gen = pony_flash.images.generate(
 print(gen.url)
 ```
 
-See [SKILL.md](SKILL.md) for full usage instructions, or browse the [reference/](reference/) directory for detailed API docs.
+### FFmpeg editing
 
-`ponyflash.editor` 已作为正式能力提供，详细语义与示例见 [reference/editor.md](reference/editor.md)。
+```bash
+bash scripts/media_ops.sh clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+```
+
+See [SKILL.md](SKILL.md) for full usage instructions.
+
+Useful references:
+
+- [reference/operations.md](reference/operations.md)
+- [reference/examples.md](reference/examples.md)
+- [assets/subtitle-style.md](assets/subtitle-style.md)
+- [assets/fonts.md](assets/fonts.md)
+
 ## Directory Structure
 
-```
+```text
 ponyflash/
-├── SKILL.md                 # Skill definition (agent reads this)
-├── README.md                # This file
-├── LICENSE                  # MIT
+├── SKILL.md
+├── README.md
+├── LICENSE
+├── assets/
+│   ├── fonts.md
+│   └── subtitle-style.md
 ├── examples/
-│   ├── quickstart.py        # Minimal working example
-│   └── advanced.md          # Advanced usage guide
-└── reference/
-    ├── images.md            # Image generation API
-    ├── video.md             # Video generation API
-    ├── speech.md            # Speech synthesis API
-    ├── music.md             # Music generation API
-    ├── models.md            # Model listing API
-    ├── files.md             # File management API
-    ├── account.md           # Account & credits API
-    └── models/
-        ├── INDEX.md         # Model catalog overview
-        └── (per-model docs)
+│   ├── quickstart.py
+│   └── advanced.md
+├── playbooks/
+│   ├── INDEX.md
+│   └── crepal-director.md
+├── reference/
+│   ├── account.md
+│   ├── examples.md
+│   ├── files.md
+│   ├── images.md
+│   ├── models.md
+│   ├── music.md
+│   ├── operations.md
+│   ├── speech.md
+│   ├── video.md
+│   └── models/
+│       ├── INDEX.md
+│       └── (per-model docs)
+└── scripts/
+    ├── build_ass_subtitles.py
+    ├── check_ffmpeg.ps1
+    ├── check_ffmpeg.sh
+    ├── install_ffmpeg.ps1
+    ├── install_ffmpeg.sh
+    └── media_ops.sh
 ```
+
+## Notes on Fonts
+
+The subtitle docs assume `assets/fonts/Adamina-Regular.ttf` and `assets/fonts/NotoSansSC-Regular.ttf`. If you want consistent subtitle rendering across machines, place both font files in `assets/fonts/`.
 
 ## Contributing
 

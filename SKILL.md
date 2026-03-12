@@ -2,43 +2,70 @@
 name: ponyflash
 description: >-
   Generate images, videos, speech audio, and music using the PonyFlash Python SDK.
-  Compose and render multi-clip video timelines locally with transitions, text overlays,
-  and audio mixing using ponyflash.editor (powered by FFmpeg).
-  Use when the user asks to create, generate, produce, compose, merge, concatenate,
-  edit, combine, stitch, or render images, videos, speech, audio, music, timelines,
-  or any AI-generated media content. Also use when checking PonyFlash account balance,
-  listing models, or managing generated files.
+  Also handle local media editing with FFmpeg, including clip, concat, transcode,
+  extract audio, frame capture, subtitle capability checks, and ASS subtitle prep.
+  Use when the user asks to create, generate, produce, edit, trim, merge, concatenate,
+  transcode, subtitle, or render AI-generated media content.
 license: MIT
 metadata:
   author: ponyflash
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
-# PonyFlash SDK
+# PonyFlash Skill
 
-## Step 0: Skill Activation & API Key Setup (MANDATORY — DO NOT SKIP)
+## Step 0: Decide Which Capability Path Applies
 
-> This skill CANNOT function without a valid PonyFlash API key. You MUST complete the onboarding below before calling ANY PonyFlash SDK method.
+This skill now contains **two capability families**:
 
-**The FIRST time this skill is activated**, tell the user the following information **in your own words, matching the user's language and your conversational style**. Do not dump a wall of text — keep it natural and friendly. But make sure all these points are covered:
+1. **Cloud generation via PonyFlash Python SDK**
+   - image generation
+   - video generation
+   - speech synthesis
+   - music generation
+   - model listing
+   - file management
+   - account / credits
+   - These tasks **require a valid PonyFlash API key**.
 
-1. PonyFlash skill is now installed and ready to use.
-2. What it can do (cover these five capabilities concisely):
-   - Image generation (text-to-image, image editing with references)
-   - Video generation (text-to-video, first-frame-to-video, digital human, motion transfer)
-   - Speech synthesis (330+ voices, emotion control, voice cloning)
-   - Music generation (lyrics, style, instrumental mode)
-   - Video composition (local timeline editing with transitions, text overlays, audio mixing)
-3. For complex multi-step productions, there are **Creative Playbooks** available in the `playbooks/` directory — the user can ask to see them or create custom ones.
-4. To get started, the user needs a PonyFlash API key:
+2. **Local media editing via FFmpeg toolchain**
+   - ffmpeg / ffprobe detection
+   - installation planning
+   - clip / concat / transcode
+   - extract audio / capture frame
+   - subtitle capability checks
+   - ASS subtitle generation and burn-in workflow
+   - These tasks **do NOT require a PonyFlash API key**, but they **do require local `ffmpeg` / `ffprobe` support**.
+
+Before doing anything, classify the request:
+
+- If the user is asking to **generate** media with PonyFlash models, follow the SDK path and require API key setup.
+- If the user is asking to **edit or process local media**, follow the FFmpeg path and do dependency checks first.
+- If the user wants an **end-to-end production workflow**, you may use both: generate assets with PonyFlash, then assemble or export with FFmpeg.
+
+## Step 1A: API Key Setup for PonyFlash SDK Tasks
+
+Only do this section when the request needs PonyFlash cloud capabilities.
+
+**The FIRST time this skill is activated for a cloud generation task**, tell the user the following in your own words:
+
+1. PonyFlash skill is ready to use.
+2. It can handle:
+   - image generation
+   - video generation
+   - speech synthesis
+   - music generation
+   - local media editing with FFmpeg
+3. For complex multi-step productions, there are **Creative Playbooks** in the `playbooks/` directory.
+4. To use PonyFlash cloud generation, the user needs an API key:
    - Register / log in at **https://www.ponyflash.com**
-   - Get API key at **https://www.ponyflash.com/api-key** (key starts with `rk_`)
-   - Check credits at **https://www.ponyflash.com/usage** (new accounts include free trial credits)
+   - Get API key at **https://www.ponyflash.com/api-key** (starts with `rk_`)
+   - Check credits at **https://www.ponyflash.com/usage**
    - Paste the key back in the chat
 
-**On subsequent activations**, check whether `PONYFLASH_API_KEY` is set in the environment. If not, ask the user for the key again.
+**On subsequent SDK activations**, check whether `PONYFLASH_API_KEY` is set in the environment. If not, ask the user for the key again.
 
-**Do NOT proceed until the user provides the key.** Once received, set it up:
+Once received, set it up:
 
 ```bash
 export PONYFLASH_API_KEY="rk_xxx"
@@ -64,7 +91,46 @@ If verification fails:
 - **Key invalid or missing** → direct user to https://api.ponyflash.com/api-key
 - **Balance is zero** → direct user to https://api.ponyflash.com/usage to top up credits
 
-## What this SDK can do
+## Step 1B: Local Dependency Setup for FFmpeg Tasks
+
+Only do this section when the request needs local editing, subtitle, or export work.
+
+1. First check local dependencies:
+
+```bash
+bash "{baseDir}/scripts/check_ffmpeg.sh"
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/check_ffmpeg.ps1"
+```
+
+2. If the task involves subtitles, do **capability checks**, not just existence checks:
+
+```bash
+bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
+```
+
+3. If `ffmpeg` / `ffprobe` or required filters are missing:
+- Tell the user what is missing.
+- Show the install plan first.
+- Only run the installer after explicit user approval.
+
+```bash
+bash "{baseDir}/scripts/install_ffmpeg.sh"
+bash "{baseDir}/scripts/install_ffmpeg.sh" --execute
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/install_ffmpeg.ps1"
+powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/install_ffmpeg.ps1" -Execute
+```
+
+## What this Skill Can Do
 
 | Capability | Resource | Description |
 |---|---|---|
@@ -75,26 +141,29 @@ If verification fails:
 | Model listing | `pony_flash.models` | List available models, get model details and supported modes |
 | File management | `pony_flash.files` | Upload, list, get, delete files |
 | Account | `pony_flash.account` | Check credit balance, get recharge link |
-| Video composition | `ponyflash.editor` | Compose multi-clip timelines locally with 58 xfade transitions, text overlays, audio mixing, multiple output formats (MP4/WebM/GIF/MOV). Powered by FFmpeg |
+| Local media editing | `scripts/media_ops.sh` | Clip, concat, transcode, extract audio, frame capture |
+| FFmpeg environment checks | `scripts/check_ffmpeg.*` | Detect ffmpeg / ffprobe and subtitle capabilities |
+| FFmpeg install planning | `scripts/install_ffmpeg.*` | Print or execute local ffmpeg installation steps |
+| ASS subtitle prep | `scripts/build_ass_subtitles.py` | Adaptive ASS subtitle generation with pre-wrapping |
 
 ## Creative Playbooks (production workflows)
 
-The `playbooks/` directory contains **Creative Playbooks** — step-by-step production workflow guides for specific content types. Playbooks act as a "director layer" on top of this SDK: they tell you **what to create and in what order**, while this SKILL.md tells you **how to call the APIs**.
+The `playbooks/` directory contains **Creative Playbooks** — step-by-step production workflow guides for specific content types. Playbooks act as a director layer: they tell you **what to create and in what order**, while this SKILL.md tells you **how to execute generation and editing**.
 
 ### When to use a playbook
 
-1. **User explicitly requests a playbook by name** (e.g., "use CrePal Director", "用 CrePal Director 来做") → Read the corresponding file from `playbooks/` and follow its workflow.
+1. **User explicitly requests a playbook by name** → Read the corresponding file from `playbooks/` and follow its workflow.
 2. **User asks to see available playbooks** → Read [playbooks/INDEX.md](playbooks/INDEX.md) and display the full list.
-3. **User's request is clearly a multi-step production task** (e.g., "make a 30-second ad video", "做一个产品宣传片", "create a story video with multiple scenes") — tasks that require planning, storyboarding, or coordination of multiple generation calls rather than a single model call → **Suggest** a matching playbook from [playbooks/INDEX.md](playbooks/INDEX.md) and ask the user whether to use it, or whether they have their own playbook. Do NOT auto-load; always let the user confirm first.
-4. **User's request is a single-step task** (e.g., "generate an image of a cat", "make a 5-second video clip") → Proceed directly with the SDK capabilities in this SKILL.md. No playbook needed.
+3. **User's request is clearly a multi-step production task** → Suggest a matching playbook from [playbooks/INDEX.md](playbooks/INDEX.md) and ask whether to use it.
+4. **User's request is a single-step generation or editing task** → Proceed directly with the relevant SDK or FFmpeg capability. No playbook needed.
 
 ### How to execute a playbook
 
 Once a playbook is loaded:
-- Follow its step-by-step workflow (素材准备 → 内容生成 → 配音配乐 → 合成剪辑 → 输出).
-- All API calls MUST still follow the specifications in this SKILL.md (client init, error handling, FileInput types, etc.).
-- Confirm key creative decisions with the user before generating (e.g., style, duration, voice).
-- The playbook provides prompt templates and parameter recommendations — adapt them to the user's specific needs.
+- Follow its workflow (asset prep → content generation → voice / music → editing → output).
+- Use PonyFlash SDK for generation tasks and FFmpeg scripts for local assembly / export tasks.
+- Confirm key creative decisions with the user before expensive generation.
+- Adapt prompts, durations, output format, and export strategy to the user's actual goal.
 
 ### Creating custom playbooks
 
@@ -107,40 +176,40 @@ description: One-line summary of what this playbook produces
 tags: [keyword1, keyword2, keyword3]
 difficulty: beginner | intermediate | advanced
 estimated_credits: credit range estimate
-output_format: format description (e.g., "竖屏 9:16 MP4")
+output_format: format description (e.g., "vertical 9:16 MP4")
 ---
 
 # Playbook Name
 
-## 适用场景
+## Use Cases
 When to use this playbook.
 
-## 创作流程
-### Step 1: 素材准备
+## Workflow
+### Step 1: Asset Preparation
 What the user needs to provide; how to generate missing assets.
 
-### Step 2: 视觉内容生成
+### Step 2: Visual Content Generation
 Which models to use, recommended parameters, prompt guidance.
 
-### Step 3: 配音/配乐
+### Step 3: Voice / Music
 Speech synthesis + background music guidance.
 
-### Step 4: 合成剪辑
-How to assemble the timeline with ponyflash.editor.
+### Step 4: Editing / Assembly
+How to assemble, trim, subtitle, transcode, and export with the local FFmpeg workflow.
 
-### Step 5: 输出与优化
+### Step 5: Output / Optimization
 Render settings, format recommendations.
 
-## Prompt 参考模板
+## Prompt Templates
 Reusable prompt examples for this content type.
 
-## 注意事项
+## Notes
 Best practices, common pitfalls.
 ```
 
 After creating the file, update [playbooks/INDEX.md](playbooks/INDEX.md) to include the new playbook.
 
-## Core concepts
+## PonyFlash SDK Core Concepts
 
 ### Client initialization
 
@@ -150,7 +219,7 @@ from ponyflash import PonyFlash
 pony_flash = PonyFlash(api_key="rk_xxx")
 ```
 
-Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted. 
+Reads `PONYFLASH_API_KEY` from environment if `api_key` is omitted.
 
 ### FileInput — zero-friction file handling
 
@@ -167,7 +236,8 @@ All file parameters accept any of these types:
 
 Temp uploads are cleaned up automatically after `generate()` completes.
 
-普通本地字符串路径（例如 `"./photo.jpg"`）不支持；本地文件请始终使用 `Path(...)` 或 `open(..., "rb")`。
+Plain local string paths such as `"./photo.jpg"` are not supported. For local files, always use `Path(...)` or `open(..., "rb")`.
+
 ### Generation result
 
 `Generation` object fields: `request_id`, `status`, `outputs`, `usage`, `error`.
@@ -177,7 +247,7 @@ Convenience properties:
 - `gen.urls` — list of all output URLs
 - `gen.credits` — credits consumed
 
-## Quick examples (one per category)
+## Quick Examples (PonyFlash SDK)
 
 ### Image
 
@@ -242,118 +312,139 @@ balance = pony_flash.account.credits()
 print(f"Balance: {balance.balance} {balance.currency}")
 ```
 
-## Video composition (local rendering)
+## Local Media Editing with FFmpeg
 
-> **No API key needed** for video composition. This module runs entirely on the local machine using FFmpeg.
+> No PonyFlash API key is needed for local editing, but local FFmpeg capability checks are mandatory.
 
-### Install
+### When to use this path
+
+Use the local FFmpeg workflow when the user asks to:
+
+- trim or cut a video
+- merge or concatenate clips
+- transcode to a target format
+- extract audio
+- capture a frame / thumbnail
+- verify subtitle support
+- prepare adaptive ASS subtitles
+- export a final edited file after PonyFlash generation
+
+### Preferred workflow
+
+1. Check dependencies:
 
 ```bash
-pip install ponyflash[editor]   # includes static-ffmpeg auto-download
-# OR: ensure ffmpeg is on your system PATH
+bash "{baseDir}/scripts/check_ffmpeg.sh"
 ```
 
-### Architecture: Asset → Clip → Track → Timeline
+2. If subtitle work is needed:
 
-The editor follows a 4-layer model (same as VideoDB):
-
-| Layer | Class | Responsibility |
-|---|---|---|
-| **Asset** | `VideoAsset`, `AudioAsset`, `ImageAsset`, `TextAsset` | Raw content reference (file path or URL) |
-| **Clip** | `Clip` | How to present the asset (duration, fit, scale, position, opacity, volume, speed) |
-| **Track** | `Track` | When clips play on the timeline (`add_clip(start, clip)`) |
-| **Timeline** | `Timeline` | Final canvas (aspect ratio, background, render output) |
-
-主视频轨使用绝对时间线语义：
-
-- `start` 是片段在最终时间线中的绝对起点。
-- 没有转场时允许 gap，渲染时会保留黑帧/静音。
-- 有转场时必须使用合法重叠窗口。例如前一个片段 5 秒、转场 1 秒，则后一个片段应从 `4.0` 秒开始，而不是 `5.0` 秒。
-### Complete example
-
-```python
-from ponyflash.editor import (
-    Timeline, Track, Clip,
-    VideoAsset, AudioAsset, ImageAsset, TextAsset,
-    Fit, Position, Transition,
-)
-
-# Assets — local files or URLs
-scene1 = VideoAsset("scene1.mp4")
-scene2 = VideoAsset("scene2.mp4")
-photo  = ImageAsset("cover.jpg")
-bgm    = AudioAsset("bgm.mp3")
-title  = TextAsset("My Video", font_size=60, color="white",
-                    box=True, box_color="black@0.5",
-                    fade_in=0.5, fade_out=0.5)
-
-# Clips — presentation layer
-clip1 = Clip(asset=scene1, duration=5.0, fit=Fit.COVER)
-clip2 = Clip(asset=scene2, duration=5.0, fit=Fit.COVER)
-clip3 = Clip(asset=photo, duration=3.0, fit=Fit.CONTAIN)
-
-# Track — sequencing with transitions
-video_track = Track()
-video_track.add_clip(0, clip1)
-video_track.add_clip(4, clip2, transition=Transition.DISSOLVE, transition_duration=1.0)
-video_track.add_clip(8.5, clip3, transition=Transition.WIPELEFT, transition_duration=0.5)
-
-text_track = Track()
-text_track.add_clip(0.5, Clip(asset=title, duration=3.0, position=Position.CENTER))
-
-audio_track = Track()
-audio_track.add_clip(0, Clip(asset=bgm, volume=0.3))
-
-# Timeline — compose and render
-timeline = Timeline(aspect_ratio="16:9")
-timeline.background = "#000000"
-timeline.add_track(video_track)
-timeline.add_track(text_track)
-timeline.add_track(audio_track)
-timeline.render("output.mp4", resolution="1080p")
+```bash
+bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
 ```
 
-### Combine with PonyFlash generation
+3. Prefer the stable script entrypoint:
 
-```python
-from ponyflash import PonyFlash
-from ponyflash.editor import Timeline, Track, Clip, VideoAsset, AudioAsset, Transition
-
-client = PonyFlash()
-v1 = client.video.generate(model="veo-3.1-fast", prompt="Sunrise timelapse")
-v2 = client.video.generate(model="veo-3.1-fast", prompt="City night aerial")
-speech = client.speech.generate(model="speech-2.8-hd", input="Welcome to our show")
-
-track = Track()
-track.add_clip(0, Clip(asset=VideoAsset(v1.url), duration=5.0))
-track.add_clip(4, Clip(asset=VideoAsset(v2.url), duration=5.0),
-               transition=Transition.DISSOLVE, transition_duration=1.0)
-
-audio_track = Track()
-audio_track.add_clip(0, Clip(asset=AudioAsset(speech.url)))
-
-tl = Timeline(aspect_ratio="16:9")
-tl.add_track(track)
-tl.add_track(audio_track)
-tl.render("final.mp4", resolution="1080p")
+```bash
+bash "{baseDir}/scripts/media_ops.sh" help
 ```
 
-### Quick reference
+4. Validate outputs after execution.
 
-**Fit modes:** `Fit.COVER` (fill + crop), `Fit.CONTAIN` (fit + letterbox), `Fit.FILL` (stretch), `Fit.NONE` (保留原始像素尺寸，超出画布时裁切后居中)
+### Capability profiles
 
-**Positions (9-zone):** `TOP_LEFT`, `TOP`, `TOP_RIGHT`, `CENTER_LEFT`, `CENTER`, `CENTER_RIGHT`, `BOTTOM_LEFT`, `BOTTOM`, `BOTTOM_RIGHT`
+- `basic`: requires `ffmpeg + ffprobe + libx264 + aac`
+- `full`: `basic` plus `subtitles` filter support
 
-**Popular transitions:** `FADE`, `FADEBLACK`, `FADEWHITE`, `DISSOLVE`, `WIPELEFT`, `WIPERIGHT`, `SLIDEUP`, `SLIDEDOWN`, `CIRCLEOPEN`, `RADIAL`, `PIXELIZE` (58 total)
+### Preferred commands
 
-**Output formats:** MP4 (H.264), MP4 (H.265), WebM (VP9), MOV (ProRes), GIF
+#### Probe media
 
-**Resolution presets:** `"360p"`, `"480p"`, `"720p"`, `"1080p"`, `"2k"`, `"4k"`, or explicit `"1920x1080"`。显式 `"WxH"` 需要使用偶数宽高。
+```bash
+bash "{baseDir}/scripts/media_ops.sh" probe --input "input.mp4"
+```
 
-For complete API signatures, all 58 transition names, and detailed parameter docs:
-See [reference/editor.md](reference/editor.md)
+#### Clip video
 
-## Error handling
+```bash
+bash "{baseDir}/scripts/media_ops.sh" clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+```
+
+Fast copy mode only when the user explicitly wants speed / near-lossless slicing:
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" clip --mode copy --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+```
+
+#### Concat clips
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" concat --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+```
+
+Fallback to reencode if copy concat fails:
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" concat --mode reencode --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+```
+
+#### Extract audio
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" extract-audio --input "input.mp4" --output "audio.m4a"
+```
+
+#### Transcode
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" transcode --input "input.mov" --output "output.mp4"
+```
+
+#### Capture frame
+
+```bash
+bash "{baseDir}/scripts/media_ops.sh" frame --input "input.mp4" --output "cover.jpg" --time "00:00:03"
+```
+
+### Subtitle workflow
+
+For `.srt` / `.ass` burn-in:
+
+```bash
+bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
+```
+
+If the task needs adaptive line wrapping or controlled subtitle layout:
+
+```bash
+python3 "{baseDir}/scripts/build_ass_subtitles.py" --help
+```
+
+Default subtitle references:
+
+- Font notes: `{baseDir}/assets/fonts.md`
+- Subtitle style: `{baseDir}/assets/subtitle-style.md`
+- Decision rules: `{baseDir}/reference/operations.md`
+- Examples: `{baseDir}/reference/examples.md`
+
+### Decision rules
+
+- Clip tasks: default to `reencode`; use `copy` only when the user explicitly wants speed / minimal loss.
+- Concat tasks: default to `copy`; fallback to `reencode` if source parameters differ.
+- Audio extraction: default to AAC in `.m4a`.
+- Transcode: default to `mp4 + libx264 + aac`.
+- Subtitle tasks: prefer `subtitles`; use `drawtext` only as a plain text fallback.
+- Do not overwrite outputs unless the user explicitly allows it.
+
+### Failure handling
+
+- If `ffmpeg` or `ffprobe` is missing, stop and handle install first.
+- If subtitle burn-in is requested but `subtitles` is missing, do not claim the machine can burn `.srt` / `.ass`.
+- If only `drawtext` exists, explain that this is text overlay fallback, not full subtitle burn-in.
+- If concat copy mode fails, retry with `reencode`.
+- If scripts do not cover the exact request, explain the limitation and fall back to a raw `ffmpeg` command.
+
+## Error Handling for PonyFlash SDK
 
 ```python
 from ponyflash import (
@@ -369,11 +460,9 @@ pony_flash = PonyFlash()
 try:
     gen = pony_flash.images.generate(model="nanobanana-pro", prompt="A cat")
 except AuthenticationError:
-    # API key is missing or invalid — guide user to get one
     print("Invalid or missing API key.")
     print("Get your API key at: https://api.ponyflash.com/api-key")
 except InsufficientCreditsError as e:
-    # Out of credits — guide user to top up
     print(f"Not enough credits. Balance: {e.balance}, required: {e.required}")
     print("Top up credits at: https://api.ponyflash.com/usage")
 except RateLimitError:
@@ -382,12 +471,16 @@ except GenerationFailedError as e:
     print(f"Generation failed: {e.generation.error.code}")
 ```
 
-## More examples
+## More Examples
 
-For advanced usage (image editing, OmniHuman, Motion Transfer, lyrics with structure tags, voice control, song continuation, etc.):
+For advanced PonyFlash SDK usage:
 See [examples/advanced.md](examples/advanced.md)
 
-## API reference (detailed signatures)
+For FFmpeg task patterns:
+- [reference/operations.md](reference/operations.md)
+- [reference/examples.md](reference/examples.md)
+
+## API Reference
 
 For complete method signatures, parameter types, and return type fields:
 
@@ -398,9 +491,12 @@ For complete method signatures, parameter types, and return type fields:
 - **Model listing**: [reference/models.md](reference/models.md)
 - **File management**: [reference/files.md](reference/files.md)
 - **Account / credits**: [reference/account.md](reference/account.md)
-- **Video composition (editor)**: [reference/editor.md](reference/editor.md)
+- **FFmpeg operation strategy**: [reference/operations.md](reference/operations.md)
+- **FFmpeg examples**: [reference/examples.md](reference/examples.md)
+- **Subtitle fonts**: [assets/fonts.md](assets/fonts.md)
+- **Subtitle style**: [assets/subtitle-style.md](assets/subtitle-style.md)
 
-## Model catalog
+## Model Catalog
 
 For all available models and their specific parameters, capabilities, and examples:
 See [reference/models/INDEX.md](reference/models/INDEX.md)
