@@ -101,12 +101,6 @@ Only do this section when the request needs local editing, subtitle, or export w
 bash "{baseDir}/scripts/check_ffmpeg.sh"
 ```
 
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/check_ffmpeg.ps1"
-```
-
 2. If the task involves subtitles, do **capability checks**, not just existence checks:
 
 ```bash
@@ -115,20 +109,8 @@ bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
 
 3. If `ffmpeg` / `ffprobe` or required filters are missing:
 - Tell the user what is missing.
-- Show the install plan first.
-- Only run the installer after explicit user approval.
-
-```bash
-bash "{baseDir}/scripts/install_ffmpeg.sh"
-bash "{baseDir}/scripts/install_ffmpeg.sh" --execute
-```
-
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/install_ffmpeg.ps1"
-powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/install_ffmpeg.ps1" -Execute
-```
+- Ask whether the user wants platform-appropriate FFmpeg installation guidance.
+- After the user installs FFmpeg, rerun the dependency checks before continuing.
 
 ## What this Skill Can Do
 
@@ -142,8 +124,8 @@ powershell -ExecutionPolicy Bypass -File "{baseDir}/scripts/install_ffmpeg.ps1" 
 | File management | `pony_flash.files` | Upload, list, get, delete files |
 | Account | `pony_flash.account` | Check credit balance, get recharge link |
 | Local media editing | `scripts/media_ops.sh` | Clip, concat, transcode, extract audio, frame capture |
-| FFmpeg environment checks | `scripts/check_ffmpeg.*` | Detect ffmpeg / ffprobe and subtitle capabilities |
-| FFmpeg install planning | `scripts/install_ffmpeg.*` | Print or execute local ffmpeg installation steps |
+| FFmpeg environment checks | `scripts/check_ffmpeg.sh` | Detect ffmpeg / ffprobe and subtitle capabilities |
+| Subtitle font prep | `scripts/ensure_subtitle_fonts.sh` | Keep a reusable local copy of the default subtitle font when explicitly requested |
 | ASS subtitle prep | `scripts/build_ass_subtitles.py` | Adaptive ASS subtitle generation with pre-wrapping |
 
 ## Creative Playbooks (production workflows)
@@ -349,7 +331,23 @@ bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
 bash "{baseDir}/scripts/media_ops.sh" help
 ```
 
-4. Validate outputs after execution.
+4. Before any multi-step editing task, create a temporary task workspace and keep **all** staged inputs and intermediate outputs inside it:
+
+```bash
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+```
+
+Use this directory for:
+
+- downloaded source media;
+- generated `.srt` / `.ass` files;
+- intermediate clips;
+- intermediate subtitled renders;
+- reusable inspection outputs that were not explicitly requested as final deliverables.
+
+5. Validate outputs after execution.
+
+6. After the task finishes, delete the temporary task workspace unless the user explicitly asked to keep intermediate artifacts.
 
 ### Capability profiles
 
@@ -367,43 +365,43 @@ bash "{baseDir}/scripts/media_ops.sh" probe --input "input.mp4"
 #### Clip video
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+bash "{baseDir}/scripts/media_ops.sh" clip --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 Fast copy mode only when the user explicitly wants speed / near-lossless slicing:
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" clip --mode copy --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+bash "{baseDir}/scripts/media_ops.sh" clip --mode copy --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 #### Concat clips
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" concat --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+bash "{baseDir}/scripts/media_ops.sh" concat --input "$taskDir/part1.mp4" --input "$taskDir/part2.mp4" --output "$taskDir/merged.mp4"
 ```
 
 Fallback to reencode if copy concat fails:
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" concat --mode reencode --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+bash "{baseDir}/scripts/media_ops.sh" concat --mode reencode --input "$taskDir/part1.mp4" --input "$taskDir/part2.mp4" --output "$taskDir/merged.mp4"
 ```
 
 #### Extract audio
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" extract-audio --input "input.mp4" --output "audio.m4a"
+bash "{baseDir}/scripts/media_ops.sh" extract-audio --input "$taskDir/input.mp4" --output "$taskDir/audio.m4a"
 ```
 
 #### Transcode
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" transcode --input "input.mov" --output "output.mp4"
+bash "{baseDir}/scripts/media_ops.sh" transcode --input "$taskDir/input.mov" --output "$taskDir/output.mp4"
 ```
 
 #### Capture frame
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" frame --input "input.mp4" --output "cover.jpg" --time "00:00:03"
+bash "{baseDir}/scripts/media_ops.sh" frame --input "$taskDir/input.mp4" --output "$taskDir/cover.jpg" --time "00:00:03"
 ```
 
 ### Subtitle workflow
@@ -414,12 +412,12 @@ For `.srt` / `.ass` burn-in:
 bash "{baseDir}/scripts/check_ffmpeg.sh" --require-subtitles-filter
 ```
 
-If subtitle style is unspecified, the agent should use the default subtitle workflow and bundled font assets.
+If subtitle style is unspecified, the agent should use the default subtitle workflow, which stages its runtime font temporarily and cleans it up after export.
 
 Preferred stable entrypoint:
 
 ```bash
-bash "{baseDir}/scripts/media_ops.sh" subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+bash "{baseDir}/scripts/media_ops.sh" subtitle-burn --input "$taskDir/input.mp4" --subtitle-file "$taskDir/subtitles.srt" --output "final-output.mp4"
 ```
 
 If the task needs adaptive line wrapping or controlled subtitle layout, or if you need to understand the underlying steps:
@@ -436,24 +434,34 @@ Default burn pattern:
 ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "input.mp4"
 ```
 
-2. Build a default ASS subtitle file:
+2. Use the stable subtitle entrypoint when the user only wants the final rendered video:
 
 ```bash
-python3 "{baseDir}/scripts/build_ass_subtitles.py" \
-  --subtitle-file "subtitles.srt" \
-  --output-ass "subtitles.ass" \
-  --video-width 1920 \
-  --video-height 1080 \
-  --latin-font-file "{baseDir}/assets/fonts/Adamina-Regular.ttf" \
-  --cjk-font-file "{baseDir}/assets/fonts/NotoSansSC-Regular.ttf"
+bash "{baseDir}/scripts/media_ops.sh" subtitle-burn --input "$taskDir/input.mp4" --subtitle-file "$taskDir/subtitles.srt" --output "final-output.mp4"
 ```
 
-3. Burn subtitles with bundled fonts:
+This path keeps only the final `final-output.mp4` by default and removes temporary ASS files and staged fonts. If the user did not explicitly request any staged files, the agent should also delete `$taskDir` after moving or confirming the final deliverable.
+
+3. Build a default ASS subtitle file only when the user explicitly wants to keep or inspect it:
 
 ```bash
-ffmpeg -i "input.mp4" \
-  -vf "subtitles=subtitles.ass:fontsdir={baseDir}/assets/fonts" \
-  -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "output.mp4"
+bash "{baseDir}/scripts/ensure_subtitle_fonts.sh"
+
+python3 "{baseDir}/scripts/build_ass_subtitles.py" \
+  --subtitle-file "$taskDir/subtitles.srt" \
+  --output-ass "$taskDir/subtitles.ass" \
+  --video-width 1920 \
+  --video-height 1080 \
+  --latin-font-file "$HOME/.cache/ponyflash/fonts/NotoSansCJKsc-Regular.otf" \
+  --cjk-font-file "$HOME/.cache/ponyflash/fonts/NotoSansCJKsc-Regular.otf"
+```
+
+4. Burn subtitles with the prepared runtime font:
+
+```bash
+ffmpeg -i "$taskDir/input.mp4" \
+  -vf "subtitles=$taskDir/subtitles.ass:fontsdir=$HOME/.cache/ponyflash/fonts" \
+  -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "final-output.mp4"
 ```
 
 Default subtitle references:
@@ -469,13 +477,15 @@ Default subtitle references:
 - Concat tasks: default to `copy`; fallback to `reencode` if source parameters differ.
 - Audio extraction: default to AAC in `.m4a`.
 - Transcode: default to `mp4 + libx264 + aac`.
-- Subtitle tasks: if subtitle style is unspecified, use the default subtitle workflow, bundled fonts, and default subtitle styling rules.
+- Subtitle tasks: if subtitle style is unspecified, use the default subtitle workflow, prepared runtime font, and default subtitle styling rules.
 - Subtitle tasks: prefer `subtitles`; use `drawtext` only as a plain text fallback.
 - Do not overwrite outputs unless the user explicitly allows it.
+- Unless the user explicitly asks to keep intermediate artifacts, remove temporary ASS files, temporary font directories, concat lists, and failed partial outputs after the task finishes.
+- Unless the user explicitly asks to keep intermediate artifacts, stage all non-final files inside `taskDir` and delete `taskDir` at the end of the task.
 
 ### Failure handling
 
-- If `ffmpeg` or `ffprobe` is missing, stop and handle install first.
+- If `ffmpeg` or `ffprobe` is missing, pause the task, help the user install FFmpeg if needed, and rerun the checks first.
 - If subtitle burn-in is requested but `subtitles` is missing, do not claim the machine can burn `.srt` / `.ass`.
 - If only `drawtext` exists, explain that this is text overlay fallback, not full subtitle burn-in.
 - If concat copy mode fails, retry with `reencode`.

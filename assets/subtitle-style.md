@@ -4,11 +4,11 @@ This style sheet serves as the default subtitle rendering reference for the skil
 
 ## Fonts
 
-- Preferred Latin font: `Adamina`
-- Chinese fallback font: `Noto Sans SC`
-- Expected asset paths:
-  - `assets/fonts/Adamina-Regular.ttf`
-  - `assets/fonts/NotoSansSC-Regular.ttf`
+- Default subtitle font: `Noto Sans CJK SC`
+- Default runtime behavior:
+  - `scripts/media_ops.sh subtitle-burn` stages the font in a temporary directory and deletes it after export
+- Explicit keep command:
+  - `bash scripts/ensure_subtitle_fonts.sh`
 
 ## Baseline Style
 

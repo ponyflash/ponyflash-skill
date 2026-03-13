@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-set -u
+# SECURITY MANIFEST:
+#   Environment variables accessed: PATH
+#   External endpoints called: none
+#   Local files read: none
+#   Local files written: none
+set -euo pipefail
 
 usage() {
   cat <<'EOF'

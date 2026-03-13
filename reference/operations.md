@@ -6,10 +6,18 @@ This document explains how an agent should make decisions when using this skill 
 
 1. Run `scripts/check_ffmpeg.sh` first.
 2. If the task involves subtitles, run an additional subtitle capability check.
-3. If dependencies or required filters are missing, stop at the installation step.
+3. If dependencies or required filters are missing, explain what is missing, offer installation guidance, and rerun the checks after installation.
 4. Confirm input files, output path, time parameters, and overwrite policy.
 5. Prefer `scripts/media_ops.sh` over ad-hoc shell commands.
 6. After execution, verify that the output file was actually created.
+7. Unless the user explicitly asks to keep intermediate files, remove temporary files and caches after the task finishes.
+8. For multi-step edits, create a temporary task directory first and keep every non-final file inside it.
+
+Example:
+
+```bash
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+```
 
 ## Capability Profiles
 
@@ -102,7 +110,7 @@ bash scripts/media_ops.sh probe --input "input.mp4"
 Use `reencode` by default, because it is less sensitive to keyframe boundaries and produces more predictable results.
 
 ```bash
-bash scripts/media_ops.sh clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+bash scripts/media_ops.sh clip --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 ### When to use `copy`
@@ -114,7 +122,7 @@ Prefer `copy` only when the user explicitly wants:
 - acceptance of keyframe-boundary inaccuracies
 
 ```bash
-bash scripts/media_ops.sh clip --mode copy --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+bash scripts/media_ops.sh clip --mode copy --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 ## Video Concat
@@ -124,7 +132,7 @@ bash scripts/media_ops.sh clip --mode copy --input "input.mp4" --output "clip.mp
 If clips share the same codec, container, and resolution, prefer `concat + copy`.
 
 ```bash
-bash scripts/media_ops.sh concat --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+bash scripts/media_ops.sh concat --input "$taskDir/part1.mp4" --input "$taskDir/part2.mp4" --output "$taskDir/merged.mp4"
 ```
 
 ### Fallback strategy
@@ -138,7 +146,7 @@ If lossless concat fails, the inputs usually differ in one of these ways:
 In that case, switch to re-encoding:
 
 ```bash
-bash scripts/media_ops.sh concat --mode reencode --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+bash scripts/media_ops.sh concat --mode reencode --input "$taskDir/part1.mp4" --input "$taskDir/part2.mp4" --output "$taskDir/merged.mp4"
 ```
 
 ## Audio Extraction
@@ -148,7 +156,7 @@ bash scripts/media_ops.sh concat --mode reencode --input "part1.mp4" --input "pa
 Use `aac` by default and prefer `.m4a` as the output format.
 
 ```bash
-bash scripts/media_ops.sh extract-audio --input "input.mp4" --output "audio.m4a"
+bash scripts/media_ops.sh extract-audio --input "$taskDir/input.mp4" --output "$taskDir/audio.m4a"
 ```
 
 ### When to use `copy`
@@ -156,7 +164,7 @@ bash scripts/media_ops.sh extract-audio --input "input.mp4" --output "audio.m4a"
 Use `copy` only when the user explicitly wants to preserve the original audio codec and the target container supports it.
 
 ```bash
-bash scripts/media_ops.sh extract-audio --input "input.mp4" --output "audio.aac" --audio-codec copy
+bash scripts/media_ops.sh extract-audio --input "$taskDir/input.mp4" --output "$taskDir/audio.aac" --audio-codec copy
 ```
 
 ## Transcoding
@@ -170,7 +178,7 @@ Prefer broadly compatible Web / app output:
 - audio codec: `aac`
 
 ```bash
-bash scripts/media_ops.sh transcode --input "input.mov" --output "output.mp4"
+bash scripts/media_ops.sh transcode --input "$taskDir/input.mov" --output "$taskDir/output.mp4"
 ```
 
 ### When to customize encoding
@@ -187,7 +195,7 @@ Override defaults only when the user explicitly asks for:
 Useful for cover images, screenshots at a specific timestamp, and preview frames.
 
 ```bash
-bash scripts/media_ops.sh frame --input "input.mp4" --output "cover.jpg" --time "00:00:03"
+bash scripts/media_ops.sh frame --input "$taskDir/input.mp4" --output "$taskDir/cover.jpg" --time "00:00:03"
 ```
 
 ## Subtitle Burn-in
@@ -196,12 +204,12 @@ bash scripts/media_ops.sh frame --input "input.mp4" --output "cover.jpg" --time 
 
 Check whether the current FFmpeg build supports the required filters first.
 
-If subtitle style is unspecified, use the default subtitle workflow and bundled font assets.
+If subtitle style is unspecified, use the default subtitle workflow, which stages its runtime font in a temporary directory, keeps subtitle sources inside `taskDir`, and cleans them up afterwards.
 
 Preferred stable entrypoint:
 
 ```bash
-bash scripts/media_ops.sh subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+bash scripts/media_ops.sh subtitle-burn --input "$taskDir/input.mp4" --subtitle-file "$taskDir/subtitles.srt" --output "final-output.mp4"
 ```
 
 If the task has explicit requirements for long-line wrapping, portrait / landscape adaptation, or subtitle safe margins, generate `.ass` first and then burn it in with `ffmpeg subtitles`.
@@ -215,8 +223,10 @@ python3 scripts/build_ass_subtitles.py --help
 Default burn pattern:
 
 1. Probe output dimensions with `ffprobe`
-2. Build `.ass` with `scripts/build_ass_subtitles.py`
-3. Burn it in with `ffmpeg subtitles=...:fontsdir=...`
+2. Stage the runtime font in a temporary directory
+3. Build `.ass` with `scripts/build_ass_subtitles.py`
+4. Burn it in with `ffmpeg subtitles=...:fontsdir=...`
+5. Delete temporary font files and temporary subtitle files, keeping only explicit deliverables
 
 The default subtitle style should use `1920x1080` as the reference baseline, but scale dynamically at runtime:
 
@@ -254,11 +264,17 @@ If both are missing:
 
 - stop the subtitle task
 - direct the user to install an FFmpeg build with `libass` / `freetype` support
-- on Linux, prefer letting the installer continue with a static full-build fallback
 
 ## Overwrite Policy
 
 Do not overwrite outputs by default. Only append `--overwrite` when the user explicitly allows it.
+
+## Cleanup Policy
+
+- Keep only the final deliverables the user explicitly requested, such as `--output` or `--ass-output`.
+- Delete temporary concat lists, temporary ASS files, temporary font directories, and failed partial outputs automatically.
+- Delete the temporary task directory after moving or confirming the final deliverable.
+- If the user explicitly asks to keep reusable fonts, a local copy may be prepared with `scripts/ensure_subtitle_fonts.sh`.
 
 ## Out-of-Scope Tasks
 

@@ -62,7 +62,7 @@ This skill now combines **PonyFlash cloud generation** and **local FFmpeg media 
 | Account | Check credit balance, get recharge link |
 | Local media editing | Clip, concat, transcode, extract audio, and frame capture through `scripts/media_ops.sh` |
 | FFmpeg capability checks | Detect `ffmpeg` / `ffprobe`, subtitle filters, and editing profile support |
-| Subtitle burn-in | Burn subtitles with `scripts/media_ops.sh subtitle-burn` using the default workflow and bundled fonts |
+| Subtitle burn-in | Burn subtitles with `scripts/media_ops.sh subtitle-burn` using the default workflow and on-demand fonts |
 | Subtitle prep | Build adaptive ASS subtitles with `scripts/build_ass_subtitles.py` |
 
 ## Prerequisites
@@ -90,6 +90,12 @@ If you also need subtitle burn-in:
 bash scripts/check_ffmpeg.sh --require-subtitles-filter
 ```
 
+The default `subtitle-burn` workflow prepares and removes its temporary subtitle font automatically. Only run this command when you explicitly want to keep a reusable local copy:
+
+```bash
+bash scripts/ensure_subtitle_fonts.sh
+```
+
 ## Quick Examples
 
 ### PonyFlash SDK
@@ -110,13 +116,15 @@ print(gen.url)
 ### FFmpeg editing
 
 ```bash
-bash scripts/media_ops.sh clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+bash scripts/media_ops.sh clip --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 ### Default subtitle burn-in
 
 ```bash
-bash scripts/media_ops.sh subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+bash scripts/media_ops.sh subtitle-burn --input "$taskDir/input.mp4" --subtitle-file "$taskDir/subtitles.srt" --output "final-output.mp4"
 ```
 
 See [SKILL.md](SKILL.md) for full usage instructions.
@@ -159,16 +167,21 @@ ponyflash/
 │       └── (per-model docs)
 └── scripts/
     ├── build_ass_subtitles.py
-    ├── check_ffmpeg.ps1
     ├── check_ffmpeg.sh
-    ├── install_ffmpeg.ps1
-    ├── install_ffmpeg.sh
+    ├── ensure_subtitle_fonts.sh
     └── media_ops.sh
 ```
 
 ## Notes on Fonts
 
-The subtitle docs assume `assets/fonts/Adamina-Regular.ttf` and `assets/fonts/NotoSansSC-Regular.ttf`. If you want consistent subtitle rendering across machines, place both font files in `assets/fonts/`.
+The default subtitle workflow downloads `Noto Sans CJK SC` into a temporary directory, burns the subtitles, and removes the temporary font files when the task finishes. Only `scripts/ensure_subtitle_fonts.sh` keeps a reusable local copy under `~/.cache/ponyflash/fonts/`. You can override that cache directory with `PONYFLASH_FONT_DIR` or pass explicit font file paths to `scripts/media_ops.sh subtitle-burn`.
+
+## Cleanup Policy
+
+- By default, clip, concat, transcode, audio extraction, frame capture, and subtitle burn-in write to temporary paths first and only keep the final `--output` file on success.
+- Temporary concat lists, temporary ASS files, staged font directories, and partial outputs are removed automatically.
+- If you explicitly pass a path such as `--output` or `--ass-output`, that path is treated as a user-requested deliverable and is kept.
+- For multi-step editing workflows, create a temporary task directory first and keep staged downloads, subtitle files, and intermediate renders inside it. Delete that directory after confirming the final deliverable unless the user explicitly asked to keep intermediates.
 
 ## Contributing
 

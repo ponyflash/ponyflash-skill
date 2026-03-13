@@ -16,6 +16,7 @@ import argparse
 import json
 import re
 import sys
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -26,8 +27,8 @@ except Exception:  # pragma: no cover - fallback path is intentional
     ImageFont = None
 
 
-LATIN_FONT_NAME = "Adamina"
-CJK_FONT_NAME = "Noto Sans SC"
+LATIN_FONT_NAME = "Noto Sans CJK SC"
+CJK_FONT_NAME = "Noto Sans CJK SC"
 DEFAULT_PRIMARY_COLOUR = "&H00FFFFFF"
 DEFAULT_OUTLINE_COLOUR = "&H00000000"
 DEFAULT_BACK_COLOUR = "&H00000000"
@@ -409,7 +410,18 @@ def main() -> int:
     args = parse_args()
     ass = build_ass(args)
     output_path = Path(args.output_ass)
-    output_path.write_text(ass, encoding="utf-8")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w",
+        encoding="utf-8",
+        dir=output_path.parent,
+        prefix=f".{output_path.stem}.",
+        suffix=f"{output_path.suffix}.tmp",
+        delete=False,
+    ) as handle:
+        handle.write(ass)
+        temp_path = Path(handle.name)
+    temp_path.replace(output_path)
     return 0
 
 

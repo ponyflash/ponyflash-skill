@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# SECURITY MANIFEST:
+#   Environment variables accessed: HOME, PATH, PONYFLASH_FONT_DIR, PONYFLASH_NOTO_FONT_URL
+#   External endpoints called:
+#     - https://mirrors.aliyun.com/CTAN/fonts/notocjksc/NotoSansCJKsc-Regular.otf
+#     - https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf
+#   Local files read: input media/subtitle files, generated ASS files, downloaded font files
+#   Local files written: output media files, temporary concat/ASS files, temporary font directories
 set -euo pipefail
 
 usage() {
@@ -8,6 +15,7 @@ Usage:
 
 Commands:
   help
+  fonts-prepare [--font-dir <dir>]
   probe --input <file>
   clip --input <file> --output <file> --start <time> --duration <time> [--mode reencode|copy] [--overwrite]
   concat --input <file> --input <file> --output <file> [--mode copy|reencode] [--overwrite]
@@ -38,6 +46,24 @@ require_file() {
   fi
 }
 
+require_output_target() {
+  local path="$1"
+  local overwrite="$2"
+  local parent_dir
+
+  parent_dir="$(dirname "$path")"
+  if [[ ! -d "$parent_dir" ]]; then
+    echo "Output directory does not exist: $parent_dir" >&2
+    exit 1
+  fi
+
+  if [[ -e "$path" && "$overwrite" -ne 1 ]]; then
+    echo "Output already exists: $path" >&2
+    echo "Use --overwrite to replace it." >&2
+    exit 1
+  fi
+}
+
 overwrite_flag() {
   if [[ "${1:-0}" -eq 1 ]]; then
     echo "-y"
@@ -46,12 +72,52 @@ overwrite_flag() {
   fi
 }
 
+run_command_to_output() {
+  local output_path="$1"
+  local overwrite="$2"
+  shift 2
+
+  local output_dir
+  local output_name
+  local temp_dir
+  local temp_output
+
+  require_output_target "$output_path" "$overwrite"
+
+  output_dir="$(dirname "$output_path")"
+  output_name="$(basename "$output_path")"
+  temp_dir="$(mktemp -d "$output_dir/.ponyflash-output.XXXXXX")"
+  temp_output="$temp_dir/$output_name"
+
+  cleanup_temp_output() {
+    rm -f "$temp_output"
+    rmdir "$temp_dir" 2>/dev/null || true
+  }
+
+  if "$@" "$temp_output"; then
+    if [[ -e "$output_path" ]]; then
+      rm -f "$output_path"
+    fi
+    mv "$temp_output" "$output_path"
+    rmdir "$temp_dir"
+    return 0
+  fi
+
+  cleanup_temp_output
+  return 1
+}
+
 require_command() {
   local command_name="$1"
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "Missing dependency: $command_name" >&2
     exit 1
   fi
+}
+
+prepare_default_font_dir() {
+  local font_dir="$1"
+  bash "$script_dir/ensure_subtitle_fonts.sh" --font-dir "$font_dir" --quiet
 }
 
 probe_video_dimensions() {
@@ -70,10 +136,9 @@ escape_filter_path() {
 }
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
-repo_root="$(cd "$script_dir/.." && pwd)"
-fonts_dir="$repo_root/assets/fonts"
-default_latin_font="$fonts_dir/Adamina-Regular.ttf"
-default_cjk_font="$fonts_dir/NotoSansSC-Regular.ttf"
+default_font="__PONYFLASH_DEFAULT_FONT__"
+default_latin_font="$default_font"
+default_cjk_font="$default_font"
 
 cmd="${1:-help}"
 if [[ $# -gt 0 ]]; then
@@ -84,6 +149,9 @@ case "$cmd" in
   help|-h|--help)
     usage
     exit 0
+    ;;
+  fonts-prepare)
+    bash "$script_dir/ensure_subtitle_fonts.sh" "$@"
     ;;
   probe)
     ensure_deps
@@ -156,9 +224,11 @@ case "$cmd" in
     require_file "$input"
 
     if [[ "$mode" == "copy" ]]; then
-      ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -ss "$start" -i "$input" -t "$duration" -c copy "$output"
+      run_command_to_output "$output" "$overwrite" \
+        ffmpeg -y -hide_banner -ss "$start" -i "$input" -t "$duration" -c copy
     elif [[ "$mode" == "reencode" ]]; then
-      ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -i "$input" -ss "$start" -t "$duration" -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "$output"
+      run_command_to_output "$output" "$overwrite" \
+        ffmpeg -y -hide_banner -i "$input" -ss "$start" -t "$duration" -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart
     else
       echo "Unsupported clip mode: $mode" >&2
       exit 2
@@ -213,9 +283,11 @@ case "$cmd" in
     done
 
     if [[ "$mode" == "copy" ]]; then
-      ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -f concat -safe 0 -i "$list_file" -c copy "$output"
+      run_command_to_output "$output" "$overwrite" \
+        ffmpeg -y -hide_banner -f concat -safe 0 -i "$list_file" -c copy
     elif [[ "$mode" == "reencode" ]]; then
-      ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -f concat -safe 0 -i "$list_file" -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "$output"
+      run_command_to_output "$output" "$overwrite" \
+        ffmpeg -y -hide_banner -f concat -safe 0 -i "$list_file" -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart
     else
       echo "Unsupported concat mode: $mode" >&2
       exit 2
@@ -263,9 +335,11 @@ case "$cmd" in
     require_file "$input"
 
     if [[ "$audio_codec" == "copy" ]]; then
-      ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -i "$input" -vn -c:a copy "$output"
+      run_command_to_output "$output" "$overwrite" \
+        ffmpeg -y -hide_banner -i "$input" -vn -c:a copy
     else
-      ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -i "$input" -vn -c:a "$audio_codec" -b:a "$bitrate" "$output"
+      run_command_to_output "$output" "$overwrite" \
+        ffmpeg -y -hide_banner -i "$input" -vn -c:a "$audio_codec" -b:a "$bitrate"
     fi
     ;;
   transcode)
@@ -324,7 +398,8 @@ case "$cmd" in
     [[ -n "$output" ]] || { echo "transcode requires --output" >&2; exit 2; }
     require_file "$input"
 
-    ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -i "$input" -c:v "$video_codec" -preset "$preset" -crf "$crf" -c:a "$audio_codec" -b:a "$bitrate" -movflags +faststart "$output"
+    run_command_to_output "$output" "$overwrite" \
+      ffmpeg -y -hide_banner -i "$input" -c:v "$video_codec" -preset "$preset" -crf "$crf" -c:a "$audio_codec" -b:a "$bitrate" -movflags +faststart
     ;;
   frame)
     ensure_deps
@@ -363,7 +438,8 @@ case "$cmd" in
     [[ -n "$time_value" ]] || { echo "frame requires --time" >&2; exit 2; }
     require_file "$input"
 
-    ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -ss "$time_value" -i "$input" -frames:v 1 "$output"
+    run_command_to_output "$output" "$overwrite" \
+      ffmpeg -y -hide_banner -ss "$time_value" -i "$input" -frames:v 1
     ;;
   subtitle-burn)
     ensure_deps
@@ -385,9 +461,12 @@ case "$cmd" in
     blur=""
     overwrite=0
     temp_ass_output=""
+    temp_fonts_dir=""
+    fonts_dir=""
 
     cleanup_subtitle_burn() {
       [[ -n "$temp_ass_output" && -f "$temp_ass_output" ]] && rm -f "$temp_ass_output"
+      [[ -n "$temp_fonts_dir" && -d "$temp_fonts_dir" ]] && rm -rf "$temp_fonts_dir"
     }
     trap cleanup_subtitle_burn EXIT
 
@@ -468,6 +547,28 @@ case "$cmd" in
 
     bash "$script_dir/check_ffmpeg.sh" --require-subtitles-filter >/dev/null
 
+    using_default_fonts=0
+    if [[ "$latin_font_file" == "$default_latin_font" && "$cjk_font_file" == "$default_cjk_font" ]]; then
+      using_default_fonts=1
+      temp_fonts_dir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-fonts.XXXXXX")"
+      latin_font_file="$(prepare_default_font_dir "$temp_fonts_dir")"
+      cjk_font_file="$latin_font_file"
+      fonts_dir="$temp_fonts_dir"
+    else
+      require_file "$latin_font_file"
+      require_file "$cjk_font_file"
+      latin_font_dir="$(cd "$(dirname "$latin_font_file")" && pwd)"
+      cjk_font_dir="$(cd "$(dirname "$cjk_font_file")" && pwd)"
+      if [[ "$latin_font_dir" == "$cjk_font_dir" ]]; then
+        fonts_dir="$latin_font_dir"
+      else
+        temp_fonts_dir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-fonts.XXXXXX")"
+        cp "$latin_font_file" "$temp_fonts_dir/"
+        cp "$cjk_font_file" "$temp_fonts_dir/"
+        fonts_dir="$temp_fonts_dir"
+      fi
+    fi
+
     subtitle_ext="$(printf '%s' "${subtitle_file##*.}" | tr '[:upper:]' '[:lower:]')"
     video_dims="$(probe_video_dimensions "$input")"
     [[ -n "$video_dims" ]] || { echo "Could not probe input video dimensions." >&2; exit 1; }
@@ -480,9 +581,6 @@ case "$cmd" in
 
     ass_source="$subtitle_file"
     if [[ "$subtitle_ext" != "ass" ]]; then
-      require_file "$latin_font_file"
-      require_file "$cjk_font_file"
-
       if [[ -n "$ass_output" ]]; then
         ass_source="$ass_output"
       else
@@ -512,9 +610,10 @@ case "$cmd" in
       python3 "${build_args[@]}"
     fi
 
-    ffmpeg "$(overwrite_flag "$overwrite")" -hide_banner -i "$input" \
+    run_command_to_output "$output" "$overwrite" \
+      ffmpeg -y -hide_banner -i "$input" \
       -vf "subtitles=$(escape_filter_path "$ass_source"):fontsdir=$(escape_filter_path "$fonts_dir")" \
-      -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "$output"
+      -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart
     ;;
   *)
     echo "Unknown command: $cmd" >&2

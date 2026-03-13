@@ -20,17 +20,7 @@ If only basic editing support is required:
 bash scripts/check_ffmpeg.sh --profile basic
 ```
 
-If dependencies are missing, print the install plan first:
-
-```bash
-bash scripts/install_ffmpeg.sh
-```
-
-Only execute the install after explicit user approval:
-
-```bash
-bash scripts/install_ffmpeg.sh --execute
-```
+If dependencies are missing, explain what is missing, offer installation guidance, and rerun the check after installation.
 
 If subtitle burn-in may be needed later, run an extra check:
 
@@ -47,7 +37,8 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh clip --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+bash scripts/media_ops.sh clip --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 ## Example 3: Fast near-lossless trimming
@@ -59,7 +50,7 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh clip --mode copy --input "input.mp4" --output "clip.mp4" --start "00:00:05" --duration "8"
+bash scripts/media_ops.sh clip --mode copy --input "$taskDir/input.mp4" --output "$taskDir/clip.mp4" --start "00:00:05" --duration "8"
 ```
 
 ## Example 4: Concatenate two clips
@@ -71,13 +62,13 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh concat --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+bash scripts/media_ops.sh concat --input "$taskDir/part1.mp4" --input "$taskDir/part2.mp4" --output "$taskDir/merged.mp4"
 ```
 
 If that fails, retry with re-encoding:
 
 ```bash
-bash scripts/media_ops.sh concat --mode reencode --input "part1.mp4" --input "part2.mp4" --output "merged.mp4"
+bash scripts/media_ops.sh concat --mode reencode --input "$taskDir/part1.mp4" --input "$taskDir/part2.mp4" --output "$taskDir/merged.mp4"
 ```
 
 ## Example 5: Extract audio
@@ -89,7 +80,7 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh extract-audio --input "input.mp4" --output "audio.m4a"
+bash scripts/media_ops.sh extract-audio --input "$taskDir/input.mp4" --output "$taskDir/audio.m4a"
 ```
 
 ## Example 6: Convert MOV to a more compatible MP4
@@ -101,7 +92,7 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh transcode --input "input.mov" --output "output.mp4"
+bash scripts/media_ops.sh transcode --input "$taskDir/input.mov" --output "$taskDir/output.mp4"
 ```
 
 ## Example 7: Export a cover frame
@@ -113,7 +104,7 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh frame --input "input.mp4" --output "cover.jpg" --time "00:00:03"
+bash scripts/media_ops.sh frame --input "$taskDir/input.mp4" --output "$taskDir/cover.jpg" --time "00:00:03"
 ```
 
 ## Example 8: Inspect media before deciding what to do
@@ -158,11 +149,7 @@ Recommended command:
 bash scripts/check_ffmpeg.sh --require-subtitles-filter
 ```
 
-If that fails, inspect the installation plan first:
-
-```bash
-bash scripts/install_ffmpeg.sh
-```
+If that fails, explain that a full FFmpeg build with `libass` support is required and ask the user to install it manually.
 
 ## Example 11: Check whether simple text overlays are possible
 
@@ -176,60 +163,31 @@ Recommended command:
 bash scripts/check_ffmpeg.sh --require-subtitle-support
 ```
 
-## Example 12: Install FFmpeg and verify subtitle capability
+## Example 12: Prepare the default subtitle font
 
 User intent:
 
-> Install an FFmpeg build that can handle subtitle burn-in
+> Keep a reusable local copy of the default subtitle font
 
 Recommended command:
 
 ```bash
-bash scripts/install_ffmpeg.sh --execute
+bash scripts/ensure_subtitle_fonts.sh
 ```
 
-Notes:
-
-- the installer verifies the `subtitles` filter after installation by default
-- if verification still fails, the package-manager build is probably incomplete
-
-## Example 13: Install only enough for stable basic editing
+## Example 13: Use a custom subtitle font cache directory
 
 User intent:
 
-> Install an FFmpeg build that is stable for editing and transcoding, but subtitles are optional
+> Download the default subtitle font into a project-specific cache directory
 
 Recommended command:
 
 ```bash
-bash scripts/install_ffmpeg.sh --profile basic --execute
+bash scripts/ensure_subtitle_fonts.sh --font-dir "./.cache/subtitle-fonts"
 ```
 
-## Example 14: Install the full version on Windows
-
-User intent:
-
-> I am on Windows. Install the full FFmpeg build for me.
-
-Recommended command:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install_ffmpeg.ps1 -Profile full -Execute
-```
-
-## Example 15: Check basic editing support on Windows
-
-User intent:
-
-> Confirm whether this Windows machine supports basic editing
-
-Recommended command:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\check_ffmpeg.ps1 -Profile basic
-```
-
-## Example 16: Generate adaptive ASS subtitles for 9:16 output
+## Example 14: Generate adaptive ASS subtitles for 9:16 output
 
 User intent:
 
@@ -238,22 +196,18 @@ User intent:
 Recommended command:
 
 ```bash
+bash scripts/ensure_subtitle_fonts.sh
+
 python3 scripts/build_ass_subtitles.py \
   --events-json "events.json" \
   --output-ass "subtitles.ass" \
   --video-width 1080 \
   --video-height 1920 \
-  --latin-font-file "assets/fonts/Adamina-Regular.ttf" \
-  --cjk-font-file "assets/fonts/NotoSansSC-Regular.ttf"
+  --latin-font-file "$HOME/.cache/ponyflash/fonts/NotoSansCJKsc-Regular.otf" \
+  --cjk-font-file "$HOME/.cache/ponyflash/fonts/NotoSansCJKsc-Regular.otf"
 ```
 
-Notes:
-
-- the script uses a `90%` safe-width rule by default
-- it pre-wraps text based on measured font width before generating `.ass`
-- after generating `.ass`, burn it in with `ffmpeg -vf subtitles=...`
-
-## Example 17: Burn subtitles with the default workflow
+## Example 15: Burn subtitles with the default workflow
 
 User intent:
 
@@ -262,17 +216,20 @@ User intent:
 Recommended command:
 
 ```bash
-bash scripts/media_ops.sh subtitle-burn --input "input.mp4" --subtitle-file "subtitles.srt" --output "output.mp4"
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+bash scripts/media_ops.sh subtitle-burn --input "$taskDir/input.mp4" --subtitle-file "$taskDir/subtitles.srt" --output "final-output.mp4"
 ```
 
 What it does by default:
 
 - probes the input video width and height with `ffprobe`
 - builds an adaptive `.ass` file with `scripts/build_ass_subtitles.py`
-- uses bundled fonts from `assets/fonts/`
+- prepares the default runtime font in a temporary directory
 - burns subtitles with `ffmpeg subtitles=...:fontsdir=...`
+- removes temporary subtitle and font files after the final output is written
+- deletes `taskDir` afterwards unless you explicitly asked to keep staged files
 
-## Example 18: Expanded default subtitle burn pattern
+## Example 16: Expanded default subtitle burn pattern
 
 User intent:
 
@@ -281,21 +238,16 @@ User intent:
 Recommended workflow:
 
 ```bash
-ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "input.mp4"
+taskDir="$(mktemp -d "${TMPDIR:-/tmp}/ponyflash-task.XXXXXX")"
+ffprobe -hide_banner -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$taskDir/input.mp4"
 ```
 
 ```bash
-python3 scripts/build_ass_subtitles.py \
-  --subtitle-file "subtitles.srt" \
-  --output-ass "subtitles.ass" \
-  --video-width 1920 \
-  --video-height 1080 \
-  --latin-font-file "assets/fonts/Adamina-Regular.ttf" \
-  --cjk-font-file "assets/fonts/NotoSansSC-Regular.ttf"
+bash scripts/media_ops.sh subtitle-burn --input "$taskDir/input.mp4" --subtitle-file "$taskDir/subtitles.srt" --output "final-output.mp4"
 ```
 
-```bash
-ffmpeg -i "input.mp4" \
-  -vf "subtitles=subtitles.ass:fontsdir=assets/fonts" \
-  -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k -movflags +faststart "output.mp4"
-```
+Notes:
+
+- the command stages fonts and temporary subtitle files automatically
+- only the final `final-output.mp4` is kept unless you explicitly request another deliverable such as `--ass-output`
+- staged downloads, subtitle sources, and intermediate renders should stay inside `taskDir`
