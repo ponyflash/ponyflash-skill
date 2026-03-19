@@ -491,6 +491,20 @@ Default subtitle references:
 - If concat copy mode fails, retry with `reencode`.
 - If scripts do not cover the exact request, explain the limitation and fall back to a raw `ffmpeg` command.
 
+## Delivering generated files to the user
+
+> **CRITICAL**: You MUST actually send generated files to the user — never just print a file path as text.
+
+### File save location
+
+Always save generated files (rendered videos, downloaded media, etc.) to **your current working directory** (e.g., `./output.mp4`), NOT to `/tmp/` or other system directories. Many agent platforms restrict file-sending to the workspace directory only. Saving to `/tmp/` will cause file delivery to fail silently.
+
+### Delivery rules
+
+1. **API-generated content** — `gen.url` is already a downloadable URL. Send it to the user, and also use your platform's file-sending capability to send the file directly in the conversation.
+2. **Locally rendered content** (e.g., `timeline.render("output.mp4")`) — save the output to your working directory, then use your platform's file-sending tool to send the actual file to the user as an attachment. Do NOT just send the file path as a text message.
+3. **Multiple outputs** — send each file with a clear label describing what it is.
+
 ## Error Handling for PonyFlash SDK
 
 ```python
